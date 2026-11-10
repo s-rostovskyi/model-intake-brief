@@ -40,6 +40,40 @@ def _normalize_text(text: str) -> str:
     return re.sub(r'\s+', ' ', text or '').strip().lower()
 
 
+def _source_id_for_outcome(outcome: dict[str, Any], index: int) -> str:
+    metadata = outcome.get('metadata') if isinstance(outcome.get('metadata'), dict) else {}
+    source_id = metadata.get('source_id') if isinstance(metadata, dict) else None
+    if isinstance(source_id, str) and source_id.strip():
+        return source_id.strip()
+    name = str(outcome.get('name') or 'source').strip().lower()
+    token = re.sub(r'[^a-z0-9]+', '-', name).strip('-') or 'source'
+    return f'{token}-{index + 1}'
+
+
+def _source_catalog(source_outcomes: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    catalog: list[dict[str, Any]] = []
+    for index, outcome in enumerate(source_outcomes):
+        catalog.append(
+            {
+                'source_id': _source_id_for_outcome(outcome, index),
+                'name': outcome.get('name'),
+                'http_status': outcome.get('http_status'),
+                'usable': outcome.get('usable'),
+                'snippet': outcome.get('snippet'),
+                'full_text': outcome.get('full_text'),
+                'metadata': outcome.get('metadata') or {},
+            }
+        )
+    return catalog
+
+
+def _source_lookup(source_outcomes: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
+    lookup: dict[str, dict[str, Any]] = {}
+    for index, outcome in enumerate(source_outcomes):
+        lookup[_source_id_for_outcome(outcome, index)] = outcome
+    return lookup
+
+
 def _sanitize_failure_reason(reason: Any, limit: int = 240) -> str:
     cleaned = re.sub(r'[\r\n]+', ' ', str(reason or '')).strip()
     cleaned = re.sub(r'\s+', ' ', cleaned)
@@ -119,7 +153,18 @@ def quote_supported(quote: str, source_text: str) -> bool:
     return _normalize_text(quote) in _normalize_text(source_text)
 
 
-def check_public_url(url: str, timeout_seconds: float) -> dict[str, Any]:
+def _url_host(url: str) -> str:
+    return urlparse(url).hostname or ''
+
+
+def _host_matches_policy(url: str, allowed_domains: list[str] | None) -> bool:
+    if not allowed_domains:
+        return True
+    host = _url_host(url)
+    return any(host == domain or host.endswith(f'.{domain}') for domain in allowed_domains)
+
+
+def check_public_url(url: str, timeout_seconds: float, allowed_domains: list[str] | None = None) -> dict[str, Any]:
     outcome: dict[str, Any] = {
         'url': url,
         'status_code': None,
@@ -170,6 +215,11 @@ def check_public_url(url: str, timeout_seconds: float) -> dict[str, Any]:
 
     outcome['status_code'] = response.status_code
     outcome['final_url'] = response.url
+    if allowed_domains is not None and not _host_matches_policy(response.url, allowed_domains):
+        outcome['outcome'] = 'blocked'
+        outcome['error_category'] = 'policy'
+        outcome['detail'] = 'Redirect destination was not on the approved source allowlist.'
+        return outcome
     if 200 <= response.status_code < 400:
         outcome['outcome'] = 'ok'
     elif response.status_code in {401, 403}:
@@ -179,14 +229,19 @@ def check_public_url(url: str, timeout_seconds: float) -> dict[str, Any]:
     return outcome
 
 
-def check_public_urls(urls: list[str], timeout_seconds: float, max_checks: int = 6) -> dict[str, dict[str, Any]]:
+def check_public_urls(
+    urls: list[str],
+    timeout_seconds: float,
+    max_checks: int = 6,
+    allowed_domains: list[str] | None = None,
+) -> dict[str, dict[str, Any]]:
     results: dict[str, dict[str, Any]] = {}
     for url in urls:
         if url in results:
             continue
         if len(results) >= max_checks:
             break
-        results[url] = check_public_url(url, timeout_seconds)
+        results[url] = check_public_url(url, timeout_seconds, allowed_domains=allowed_domains)
     return results
 
 
@@ -243,78 +298,24 @@ def build_assessment_schema(checklist_items: list[ChecklistItem]) -> dict[str, A
         'properties': {
             'item_id': {'type': 'string', 'enum': item_ids},
             'status': {'type': 'string', 'enum': ALLOWED_STATUSES},
-            'summary': {'type': 'string'},
+            'source_id': {'type': ['string', 'null']},
             'quote': {'type': ['string', 'null']},
-            'source_name': {'type': ['string', 'null']},
-            'source_url': {'type': ['string', 'null']},
-            'source_section': {'type': ['string', 'null']},
-            'model_applicability': {'type': ['string', 'null']},
-            'link_check_url': {'type': ['string', 'null']},
-            'searched_sources': {
-                'type': 'array',
-                'items': {'type': 'string'},
-            },
-            'failure_reason': {'type': ['string', 'null']},
-            'regulatory_reference': {'type': ['string', 'null']},
-            'provider_question': {'type': ['string', 'null']},
+            'gap_explanation': {'type': ['string', 'null']},
         },
-        'required': [
-            'item_id',
-            'status',
-            'summary',
-            'quote',
-            'source_name',
-            'source_url',
-            'source_section',
-            'model_applicability',
-            'link_check_url',
-            'searched_sources',
-            'failure_reason',
-            'regulatory_reference',
-            'provider_question',
-        ],
+        'required': ['item_id', 'status', 'source_id', 'quote', 'gap_explanation'],
     }
     return {
         'type': 'object',
         'additionalProperties': False,
         'properties': {
-            'summary': {
-                'type': 'object',
-                'additionalProperties': False,
-                'properties': {
-                    'headline': {'type': 'string'},
-                    'major_gaps': {'type': 'array', 'items': {'type': 'string'}},
-                    'status_counts': {
-                        'type': 'object',
-                        'additionalProperties': False,
-                        'properties': {status: {'type': 'integer'} for status in ALLOWED_STATUSES},
-                        'required': ALLOWED_STATUSES,
-                    },
-                },
-                'required': ['headline', 'major_gaps', 'status_counts'],
-            },
             'findings': {
                 'type': 'array',
                 'minItems': len(item_ids),
                 'maxItems': len(item_ids),
                 'items': findings_schema,
             },
-            'prioritized_provider_questions': {
-                'type': 'array',
-                'items': {
-                    'type': 'object',
-                    'additionalProperties': False,
-                    'properties': {
-                        'priority': {'type': 'integer'},
-                        'question': {'type': 'string'},
-                        'related_item_ids': {'type': 'array', 'items': {'type': 'string'}},
-                    },
-                    'required': ['priority', 'question', 'related_item_ids'],
-                },
-            },
-            'methods_and_limitations': {'type': 'array', 'items': {'type': 'string'}},
         },
-        'required': ['summary', 'findings', 'prioritized_provider_questions', 'methods_and_limitations'],
+        'required': ['findings'],
     }
 
 
@@ -326,43 +327,37 @@ def call_openai_assessment(
     timeout_seconds: float,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     schema = build_assessment_schema(checklist_items)
+    source_catalog = _source_catalog(source_outcomes)
     prompt = {
         'task': 'Assess public evidence for the fixed checklist.',
         'rules': [
             'Use only the provided provider evidence.',
             'Do not use regulatory context or outside knowledge for provider evidence.',
-            'Return one finding per checklist item.',
-            'Keep each finding short and direct.',
-            'Use at most one brief verbatim quote per finding when supported.',
+            'Return one finding per checklist item in the same order.',
+            'Use only the supplied source_id values.',
+            'Keep each finding compact: item_id, proposed status, source_id when applicable, one short quote when supported, and a brief gap explanation when needed.',
+            'Do not repeat URLs, checklist labels, regulatory references, searched-source lists, or report prose.',
             'If a quote is unsupported or attributed to a different variant, do not keep it as evidence found.',
-            'For unresolved items, include searched sources or a failure reason.',
-            'Keep provider questions separate from regulatory context.',
-            'Reuse the checklist labels and references already provided.',
+            'If evidence is unresolved, leave source_id null and explain the gap briefly.',
         ],
         'target': target,
         'checklist': [
             {
                 'item_id': item.item_id,
                 'check': item.check,
-                'reference': item.reference,
-                'evidence_sufficient': item.evidence_sufficient,
-                'is_context': item.is_context,
             }
             for item in checklist_items
         ],
-        'provider_evidence': [
+        'source_catalog': [
             {
+                'source_id': source.get('source_id'),
                 'name': outcome.get('name'),
-                'requested_url': outcome.get('requested_url'),
-                'http_status': outcome.get('http_status'),
                 'usable': outcome.get('usable'),
-                'urls': outcome.get('urls') or [],
+                'http_status': outcome.get('http_status'),
                 'snippet': outcome.get('snippet'),
-                'full_text': _truncate(str(outcome.get('full_text') or ''), 6000) if outcome.get('full_text') else None,
-                'error': outcome.get('error'),
-                'metadata': outcome.get('metadata') or {},
+                'full_text': _truncate(str(outcome.get('full_text') or ''), 3500) if outcome.get('full_text') else None,
             }
-            for outcome in source_outcomes
+            for source, outcome in zip(source_catalog, source_outcomes, strict=False)
         ],
     }
     try:
@@ -469,6 +464,7 @@ def normalize_assessment_output(
     link_checks: dict[str, dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     findings_by_id = {finding.get('item_id'): finding for finding in raw_output.get('findings', []) if isinstance(finding, dict)}
+    source_lookup = _source_lookup(source_outcomes)
     source_texts = _source_texts(source_outcomes)
     normalized_findings: list[dict[str, Any]] = []
     unresolved_questions: list[dict[str, Any]] = []
@@ -476,59 +472,40 @@ def normalize_assessment_output(
     for item in checklist_items:
         finding = dict(findings_by_id.get(item.item_id) or {})
         status = _normalize_status(finding.get('status'))
-        summary = str(finding.get('summary') or '').strip() or f'No supported evidence found for {item.item_id}.'
-        quote = finding.get('quote')
-        source_url = finding.get('source_url')
-        source_name = finding.get('source_name')
-        source_section = finding.get('source_section')
-        model_applicability = finding.get('model_applicability')
-        link_check_url = finding.get('link_check_url')
-        searched_sources = finding.get('searched_sources') if isinstance(finding.get('searched_sources'), list) else []
-        failure_reason = finding.get('failure_reason')
-        regulatory_reference = finding.get('regulatory_reference')
-        provider_question = finding.get('provider_question')
+        source_id = finding.get('source_id') if isinstance(finding.get('source_id'), str) else None
+        quote = finding.get('quote') if isinstance(finding.get('quote'), str) else None
+        gap_explanation = str(finding.get('gap_explanation') or '').strip()
 
-        source_text = ''
-        if isinstance(source_url, str) and source_url:
-            source_text = source_texts.get(source_url, '')
-        if not source_text and isinstance(source_name, str) and source_name:
-            for outcome in source_outcomes:
-                if outcome.get('name') == source_name:
-                    source_text = _find_text(outcome)
-                    if not source_url and isinstance(outcome.get('requested_url'), str):
-                        source_url = outcome.get('requested_url')
-                    break
+        source_outcome = source_lookup.get(source_id) if source_id else None
+        source_name = source_outcome.get('name') if source_outcome else None
+        source_url = source_outcome.get('requested_url') if source_outcome else None
+        if not source_url and source_outcome:
+            urls = source_outcome.get('urls') or []
+            if urls:
+                source_url = urls[0]
+        source_text = _find_text(source_outcome) if source_outcome else ''
 
-        if quote and isinstance(quote, str):
-            if not quote_applies_to_target(quote, exact_model_id, model_applicability if isinstance(model_applicability, str) else None):
-                status = 'Partial' if status == 'Evidence found' else status
-                if not failure_reason:
-                    failure_reason = 'Quoted text appeared to describe a different model variant.'
-                quote = None
-                model_applicability = None
+        if quote:
+            if _mentions_conflicting_variant(quote, exact_model_id):
+                if not source_text or not quote_supported(quote, source_text) or exact_model_id.lower() not in _normalize_text(source_text):
+                    status = 'Partial' if status == 'Evidence found' else status
+                    gap_explanation = gap_explanation or 'Quoted text appeared to describe a different model variant.'
+                    quote = None
             elif not source_text or not quote_supported(quote, source_text):
-                if status == 'Evidence found':
-                    status = 'Partial'
-                if not failure_reason:
-                    failure_reason = 'Quoted text was not supported by the extracted source text.'
+                status = 'Partial' if status == 'Evidence found' else status
+                gap_explanation = gap_explanation or 'Quoted text was not supported by the extracted source text.'
                 quote = None
-                model_applicability = None
-        elif status in {'Evidence found', 'Partial'} and not source_text:
+
+        if status in {'Evidence found', 'Partial'} and not source_text:
             status = 'Not found'
-            if not failure_reason:
-                failure_reason = _default_failure_reason(item, source_outcomes)
+            gap_explanation = gap_explanation or _default_failure_reason(item, source_outcomes)
 
-        if status in {'Not found', 'Not checked'} and not failure_reason:
-            failure_reason = _default_failure_reason(item, source_outcomes)
-
-        if not searched_sources:
-            searched_sources = [outcome.get('requested_url') or outcome.get('name') for outcome in source_outcomes if outcome.get('requested_url') or outcome.get('name')][:3]
+        if status in {'Not found', 'Not checked'} and not gap_explanation:
+            gap_explanation = _default_failure_reason(item, source_outcomes)
 
         link_check = None
         if isinstance(source_url, str) and link_checks:
             link_check = link_checks.get(source_url)
-        if not link_check and isinstance(link_check_url, str) and link_checks:
-            link_check = link_checks.get(link_check_url)
         link_check_outcome = None
         if isinstance(link_check, dict):
             outcome_value = link_check.get('outcome')
@@ -545,45 +522,41 @@ def normalize_assessment_output(
                 'reference': item.reference,
                 'evidence_sufficient': item.evidence_sufficient,
                 'status': status,
-                'summary': summary,
-                'quote': quote if isinstance(quote, str) and quote else None,
+                'source_id': source_id,
+                'quote': quote,
                 'source_name': source_name if isinstance(source_name, str) else None,
                 'source_url': source_url if isinstance(source_url, str) else None,
-                'source_section': source_section if isinstance(source_section, str) else None,
-                'model_applicability': model_applicability if isinstance(model_applicability, str) else None,
-                'link_check_url': link_check_url if isinstance(link_check_url, str) else None,
+                'source_section': None,
+                'model_applicability': None,
+                'link_check_url': source_url if isinstance(source_url, str) else None,
                 'link_check_outcome': link_check_outcome,
-                'searched_sources': [str(value) for value in searched_sources if value],
-                'failure_reason': str(failure_reason) if failure_reason else None,
-                'regulatory_reference': str(regulatory_reference) if regulatory_reference else None,
-                'provider_question': str(provider_question) if provider_question else None,
+                'searched_sources': [source_id] if source_id else [],
+                'failure_reason': gap_explanation or None,
+                'regulatory_reference': item.reference,
+                'provider_question': None,
             }
         )
         if status != 'Evidence found':
-            provider_question = provider_question or f'Please provide public documentation for {item.check}.'
             unresolved_questions.append(
                 {
                     'priority': len(unresolved_questions) + 1,
-                    'question': str(provider_question),
+                    'question': gap_explanation or f'Please provide public documentation for {item.check}.',
                     'related_item_ids': [item.item_id],
                 }
             )
 
     counts = Counter(finding['status'] for finding in normalized_findings)
-    summary = raw_output.get('summary') if isinstance(raw_output.get('summary'), dict) else {}
-    summary_counts = {status: counts.get(status, 0) for status in ALLOWED_STATUSES}
-    summary_counts.update({status: int(summary.get('status_counts', {}).get(status, summary_counts[status])) for status in ALLOWED_STATUSES})
-    summary_counts = {status: counts.get(status, 0) for status in ALLOWED_STATUSES}
     usage = raw_output.get('usage') if isinstance(raw_output.get('usage'), dict) else {}
+    methods = raw_output.get('methods_and_limitations') if isinstance(raw_output.get('methods_and_limitations'), list) else []
     return {
         'summary': {
-            'headline': str(summary.get('headline') or 'Assessment complete.'),
-            'major_gaps': [str(value) for value in summary.get('major_gaps', []) if value],
-            'status_counts': summary_counts,
+            'headline': 'Assessment complete.',
+            'major_gaps': [question['question'] for question in unresolved_questions[:3]],
+            'status_counts': {status: counts.get(status, 0) for status in ALLOWED_STATUSES},
         },
         'findings': normalized_findings,
-        'prioritized_provider_questions': raw_output.get('prioritized_provider_questions') or unresolved_questions,
-        'methods_and_limitations': [str(value) for value in (raw_output.get('methods_and_limitations') or []) if value],
+        'prioritized_provider_questions': unresolved_questions,
+        'methods_and_limitations': [str(value) for value in methods if value],
         'request_usage': usage,
         'aggregate_usage': usage,
         'usage': usage,
@@ -793,12 +766,15 @@ def render_markdown(
     for item in checklist_items:
         finding = finding_map.get(item.item_id, {})
         status = finding.get('status', 'Not checked')
-        lines.append(f"- {item.item_id} — {item.check}: {status}")
+        lines.append(f"- {item.item_id} - {item.check}: {status}")
         lines.append(f"  - Reference: {item.reference}")
         lines.append(f"  - Evidence sufficient: {item.evidence_sufficient}")
-        summary_text = finding.get('summary')
-        if summary_text:
-            lines.append(f'  - Summary: {summary_text}')
+        source_id = finding.get('source_id')
+        if source_id:
+            lines.append(f'  - Source ID: {source_id}')
+        gap_explanation = finding.get('gap_explanation') or finding.get('failure_reason') or finding.get('summary')
+        if gap_explanation:
+            lines.append(f'  - Gap explanation: {gap_explanation}')
         quote = finding.get('quote')
         if quote:
             lines.append(f'  - Quote: {quote}')

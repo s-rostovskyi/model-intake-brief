@@ -22,6 +22,7 @@ from .settings import load_live_settings
 
 CHECKLIST_ITEM_BY_TARGET_KIND = {'hugging_face': 'DT-03', 'hosted': 'US-03'}
 HF_MODEL_CARD_URL = 'https://huggingface.co/Qwen/Qwen3-8B'
+GPT52_TRAINING_SUMMARY_URL = 'https://cdn.openai.com/pdf/gpt-5-2-eu-ai-act-public-summary-of-training-content.pdf'
 
 
 class IntakeState(TypedDict, total=False):
@@ -157,6 +158,8 @@ def _collect_hosted_sources(provider: str | None, exact_model_id: str, live_sett
     outcomes.append(follow_up_search)
 
     candidate_urls: list[str] = []
+    if (provider or '').strip().lower() == 'openai' and exact_model_id == 'gpt-5.2-2025-12-11':
+        candidate_urls.append(GPT52_TRAINING_SUMMARY_URL)
     for outcome in (primary_search, follow_up_search):
         for url in outcome.urls:
             if url not in candidate_urls:
@@ -318,7 +321,12 @@ def assess_evidence(state: IntakeState) -> IntakeState:
             url = finding.get(key)
             if isinstance(url, str) and url and url not in candidate_urls:
                 candidate_urls.append(url)
-    link_checks = check_public_urls(candidate_urls, timeout_seconds=15.0, max_checks=6)
+    link_checks = check_public_urls(
+        candidate_urls,
+        timeout_seconds=15.0,
+        max_checks=6,
+        allowed_domains=state.get('provider_domains') or [],
+    )
     assessment = normalize_assessment_output(
         raw_output,
         checklist,

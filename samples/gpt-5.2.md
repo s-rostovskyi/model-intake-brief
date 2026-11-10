@@ -1,0 +1,579 @@
+# Model Intake Brief
+
+## Full report
+
+- Exact model ID: `gpt-5.2-2025-12-11`
+- Model provider: openai
+- Hosting platform: openai
+- Target kind: hosted
+- Checklist version: v0.1
+- Run date: 2026-11-10
+- Notice: Information, not legal advice.
+- Assessment request output token cap: 4000
+- Assessment request usage: input tokens 4286, output tokens 912
+- Aggregate assessment usage: input tokens 4286, output tokens 912
+
+### Summary
+- Headline: Assessment complete.
+- Evidence found: 10
+- Partial: 4
+- Not found: 4
+- Not checked: 0
+- Major gaps:
+  - Access terms are only described for Codex surfaces and paid ChatGPT users; no full licence or general access terms are provided here.
+  - No parameter count or comparable size figure is given in the supplied evidence.
+  - Quoted text was not supported by the extracted source text.
+
+### Source collection
+- Tavily Search: HTTP 200; usable data: yes
+  - Requested URL: https://api.tavily.com/search
+  - Source URLs:
+    - https://cdn.openai.com/pdf/3a4153c8-c748-4b71-8e31-aecbde944f8d/oai_5_2_system-card.pdf
+    - https://openai.com/index/introducing-gpt-5-2-codex
+    - https://community.openai.com/t/more-detailed-information-about-models/1373598
+  - Search snippet (candidate material only): Update to GPT-5 System Card: GPT-5.2 OpenAI December 11, 2025 1 Contents 1 Introduction 3 2 Model Data and Training 3 3 Baseline Model Safety Evaluations 3 3.1 Disallowed Content Evaluations . . . . . . . . . . . . . . . . . . . . . . . .…
+  - Metadata:
+    - result_count: 3
+- Tavily Search: HTTP 200; usable data: yes
+  - Requested URL: https://api.tavily.com/search
+  - Source URLs:
+    - https://cdn.openai.com/pdf/3a4153c8-c748-4b71-8e31-aecbde944f8d/oai_5_2_system-card.pdf
+    - https://developers.openai.com/api/docs/models/gpt-5.2-pro
+    - https://openai.com/policies/may-2025-business-terms
+  - Search snippet (candidate material only): Update to GPT-5 System Card: GPT-5.2 OpenAI December 11, 2025 1 Contents 1 Introduction 3 2 Model Data and Training 3 3 Baseline Model Safety Evaluations 3 3.1 Disallowed Content Evaluations . . . . . . . . . . . . . . . . . . . . . . . .…
+  - Metadata:
+    - result_count: 3
+- Jina Reader: HTTP 200; usable data: yes
+  - Requested URL: https://cdn.openai.com/pdf/gpt-5-2-eu-ai-act-public-summary-of-training-content.pdf
+  - Extracted text: Title: Public Summary of Training Content for GPT-5.2 URL Source: https://cdn.openai.com/pdf/gpt-5-2-eu-ai-act-public-summary-of-training-content.pdf Published Time: Fri, 07 Aug 2026 20:07:47 GMT Number of Pages: 7 Markdown Content: Public…
+- Jina Reader: HTTP 200; usable data: yes
+  - Requested URL: https://cdn.openai.com/pdf/3a4153c8-c748-4b71-8e31-aecbde944f8d/oai_5_2_system-card.pdf
+  - Extracted text: Title: oai_5_2_system-card.pdf URL Source: https://cdn.openai.com/pdf/3a4153c8-c748-4b71-8e31-aecbde944f8d/oai_5_2_system-card.pdf Published Time: Thu, 11 Dec 2025 21:18:31 GMT Number of Pages: 27 Markdown Content: # Update to GPT-5 System…
+- Jina Reader: HTTP 200; usable data: yes
+  - Requested URL: https://openai.com/index/introducing-gpt-5-2-codex
+  - Extracted text: Title: Introducing GPT-5.2-Codex URL Source: https://openai.com/index/introducing-gpt-5-2-codex Final URL: https://openai.com/index/introducing-gpt-5-2-codex/ Published Time: Thu, 18 Dec 2025 17:23:49 GMT Markdown Content: Today we’re rele…
+
+### Findings
+- ID-01 - Provider and model identity: Evidence found
+  - Reference: Form, General information
+  - Evidence sufficient: Official documentation identifies the provider and the exact model or version. A family name alone is partial.
+  - Source ID: jina-reader-4
+  - Quote: GPT-5.2 is the latest model family in the GPT-5 series
+  - Source: Jina Reader
+  - Source URL: https://cdn.openai.com/pdf/3a4153c8-c748-4b71-8e31-aecbde944f8d/oai_5_2_system-card.pdf
+  - Link check: https://cdn.openai.com/pdf/3a4153c8-c748-4b71-8e31-aecbde944f8d/oai_5_2_system-card.pdf -> HTTP 200 (ok)
+  - Regulatory reference: Form, General information
+  - Searched sources:
+    - jina-reader-4
+- ID-02 - Release date: Evidence found
+  - Reference: Annex XII §1(c), Form, General information
+  - Evidence sufficient: Provider identifies when the target model first became available. A repository modification date alone is insufficient.
+  - Source ID: jina-reader-4
+  - Quote: December 11, 2025
+  - Source: Jina Reader
+  - Source URL: https://cdn.openai.com/pdf/3a4153c8-c748-4b71-8e31-aecbde944f8d/oai_5_2_system-card.pdf
+  - Link check: https://cdn.openai.com/pdf/3a4153c8-c748-4b71-8e31-aecbde944f8d/oai_5_2_system-card.pdf -> HTTP 200 (ok)
+  - Regulatory reference: Annex XII §1(c), Form, General information
+  - Searched sources:
+    - jina-reader-4
+- ID-03 - Base model dependencies: Evidence found
+  - Reference: Form, General information
+  - Evidence sufficient: Exact upstream model or checkpoint is named, or the provider explicitly states that the model is not a modification or fine-tune of a prior model.
+  - Source ID: jina-reader-3
+  - Quote: GPT-5.2 is not a modification or a fine-tune of a prior model.
+  - Source: Jina Reader
+  - Source URL: https://cdn.openai.com/pdf/gpt-5-2-eu-ai-act-public-summary-of-training-content.pdf
+  - Link check: https://cdn.openai.com/pdf/gpt-5-2-eu-ai-act-public-summary-of-training-content.pdf -> HTTP 200 (ok)
+  - Regulatory reference: Form, General information
+  - Searched sources:
+    - jina-reader-3
+- DS-01 - Distribution and access: Evidence found
+  - Reference: Annex XII §1(c), Form, Methods of distribution and licenses
+  - Evidence sufficient: Official repository, API documentation or equivalent identifies how the exact model is accessed and whether access is to weights or a hosted service.
+  - Source ID: jina-reader-5
+  - Quote: We're releasing GPT‑5.2‑Codex today in all Codex surfaces for paid ChatGPT users, and working towards safely enabling access to GPT‑5.2‑Codex for API users in the coming weeks.
+  - Source: Jina Reader
+  - Source URL: https://openai.com/index/introducing-gpt-5-2-codex
+  - Link check: https://openai.com/index/introducing-gpt-5-2-codex -> HTTP 200 (ok)
+  - Regulatory reference: Annex XII §1(c), Form, Methods of distribution and licenses
+  - Searched sources:
+    - jina-reader-5
+- DS-02 - Licence or access terms: Partial
+  - Reference: Annex XII §1(h), Form, Methods of distribution and licenses
+  - Evidence sufficient: Applicable licence text or service terms are linked from official documentation and can be tied to this distribution channel.
+  - Source ID: jina-reader-5
+  - Gap explanation: Access terms are only described for Codex surfaces and paid ChatGPT users; no full licence or general access terms are provided here.
+  - Quote: We're releasing GPT‑5.2‑Codex today in all Codex surfaces for paid ChatGPT users
+  - Source: Jina Reader
+  - Source URL: https://openai.com/index/introducing-gpt-5-2-codex
+  - Link check: https://openai.com/index/introducing-gpt-5-2-codex -> HTTP 200 (ok)
+  - Regulatory reference: Annex XII §1(h), Form, Methods of distribution and licenses
+  - Searched sources:
+    - jina-reader-5
+  - Failure reason: Access terms are only described for Codex surfaces and paid ChatGPT users; no full licence or general access terms are provided here.
+- TP-01 - Architecture: Evidence found
+  - Reference: Annex XII §1(f), Form, Model properties
+  - Evidence sufficient: Architecture type is documented for the target model. A family description covering several architectures is partial without a mapping.
+  - Source ID: jina-reader-4
+  - Quote: In this card we also refer to GPT-5.2 Instant as gpt-5.2-instant and GPT-5.2 Thinking as gpt-5.2-thinking.
+  - Source: Jina Reader
+  - Source URL: https://cdn.openai.com/pdf/3a4153c8-c748-4b71-8e31-aecbde944f8d/oai_5_2_system-card.pdf
+  - Link check: https://cdn.openai.com/pdf/3a4153c8-c748-4b71-8e31-aecbde944f8d/oai_5_2_system-card.pdf -> HTTP 200 (ok)
+  - Regulatory reference: Annex XII §1(f), Form, Model properties
+  - Searched sources:
+    - jina-reader-4
+- TP-02 - Parameter size: Not found
+  - Reference: Annex XII §1(f), Form, Model properties
+  - Evidence sufficient: Total parameter count or a clearly documented size range for the target model. Active parameter count alone is partial.
+  - Gap explanation: No parameter count or comparable size figure is given in the supplied evidence.
+  - Regulatory reference: Annex XII §1(f), Form, Model properties
+  - Failure reason: No parameter count or comparable size figure is given in the supplied evidence.
+- TP-03 - Input and output modalities: Partial
+  - Reference: Annex XII §1(g), Form, Model properties
+  - Evidence sufficient: Provider states supported input and output types for the target model.
+  - Source ID: jina-reader-3
+  - Gap explanation: Quoted text was not supported by the extracted source text.
+  - Source: Jina Reader
+  - Source URL: https://cdn.openai.com/pdf/gpt-5-2-eu-ai-act-public-summary-of-training-content.pdf
+  - Link check: https://cdn.openai.com/pdf/gpt-5-2-eu-ai-act-public-summary-of-training-content.pdf -> HTTP 200 (ok)
+  - Regulatory reference: Annex XII §1(g), Form, Model properties
+  - Searched sources:
+    - jina-reader-3
+  - Failure reason: Quoted text was not supported by the extracted source text.
+- TP-04 - Input and output limits: Not found
+  - Reference: Annex XII §2(b), Form, Model properties
+  - Evidence sufficient: Official documentation gives relevant limits and their units. A single shared context limit is partial if the output limit is unspecified.
+  - Gap explanation: No input/output length limits or context-window limits are stated in the supplied evidence.
+  - Regulatory reference: Annex XII §2(b), Form, Model properties
+  - Failure reason: No input/output length limits or context-window limits are stated in the supplied evidence.
+- US-01 - Intended tasks and uses: Evidence found
+  - Reference: Annex XII §1(a), Form, Intended uses
+  - Evidence sufficient: Provider describes representative uses or gives integration examples explicitly associated with the target model.
+  - Source ID: jina-reader-5
+  - Quote: optimized for agentic coding in Codex
+  - Source: Jina Reader
+  - Source URL: https://openai.com/index/introducing-gpt-5-2-codex
+  - Link check: https://openai.com/index/introducing-gpt-5-2-codex -> HTTP 200 (ok)
+  - Regulatory reference: Annex XII §1(a), Form, Intended uses
+  - Searched sources:
+    - jina-reader-5
+- US-02 - Restrictions on use: Partial
+  - Reference: Annex XII §1(b), Form, Intended uses
+  - Evidence sufficient: Applicable restrictions or acceptable-use terms are linked and their relationship to this model or service is documented.
+  - Source ID: jina-reader-5
+  - Gap explanation: The evidence notes risk and careful deployment, but does not state explicit use restrictions.
+  - Quote: These advances can help strengthen cybersecurity at scale, but they also raise new dual-use risks that require careful deployment.
+  - Source: Jina Reader
+  - Source URL: https://openai.com/index/introducing-gpt-5-2-codex
+  - Link check: https://openai.com/index/introducing-gpt-5-2-codex -> HTTP 200 (ok)
+  - Regulatory reference: Annex XII §1(b), Form, Intended uses
+  - Searched sources:
+    - jina-reader-5
+  - Failure reason: The evidence notes risk and careful deployment, but does not state explicit use restrictions.
+- US-03 - Integration instructions: Partial
+  - Reference: Annex XII §2(a)
+  - Evidence sufficient: Official instructions identify a usable API call or local setup and its relevant prerequisites.
+  - Source ID: jina-reader-5
+  - Gap explanation: Quoted text was not supported by the extracted source text.
+  - Source: Jina Reader
+  - Source URL: https://openai.com/index/introducing-gpt-5-2-codex
+  - Link check: https://openai.com/index/introducing-gpt-5-2-codex -> HTTP 200 (ok)
+  - Regulatory reference: Annex XII §2(a)
+  - Searched sources:
+    - jina-reader-5
+  - Failure reason: Quoted text was not supported by the extracted source text.
+- DT-01 - Training data types and provenance: Evidence found
+  - Reference: Annex XII §2(c), Form, Data
+  - Evidence sufficient: Provider identifies the data types and source categories for the model or a family explicitly documented as sharing them.
+  - Source ID: jina-reader-4
+  - Quote: trained on diverse datasets, including information that is publicly available on the internet, information that we partner with third parties to access, and information that our users or human trainers and researchers provide or generate
+  - Source: Jina Reader
+  - Source URL: https://cdn.openai.com/pdf/3a4153c8-c748-4b71-8e31-aecbde944f8d/oai_5_2_system-card.pdf
+  - Link check: https://cdn.openai.com/pdf/3a4153c8-c748-4b71-8e31-aecbde944f8d/oai_5_2_system-card.pdf -> HTTP 200 (ok)
+  - Regulatory reference: Annex XII §2(c), Form, Data
+  - Searched sources:
+    - jina-reader-4
+- DT-02 - Training data curation: Evidence found
+  - Reference: Annex XII §2(c), Form, Data
+  - Evidence sufficient: Model-specific documentation explains selection, filtering or other relevant curation methods. Family-level evidence without explicit applicability is partial.
+  - Source ID: jina-reader-3
+  - Quote: curated and filtered for quality and safety
+  - Source: Jina Reader
+  - Source URL: https://cdn.openai.com/pdf/gpt-5-2-eu-ai-act-public-summary-of-training-content.pdf
+  - Link check: https://cdn.openai.com/pdf/gpt-5-2-eu-ai-act-public-summary-of-training-content.pdf -> HTTP 200 (ok)
+  - Regulatory reference: Annex XII §2(c), Form, Data
+  - Searched sources:
+    - jina-reader-3
+- DT-03 - Public training-content summary: Evidence found
+  - Reference: Article 53(1)(d), separate AI Office template
+  - Evidence sufficient: A provider-published public summary explicitly covers the target model. A technical report may support other data checks and should be distinguished from a published summary.
+  - Source ID: jina-reader-3
+  - Quote: Public Summary of Training Content for GPT-5.2
+  - Source: Jina Reader
+  - Source URL: https://cdn.openai.com/pdf/gpt-5-2-eu-ai-act-public-summary-of-training-content.pdf
+  - Link check: https://cdn.openai.com/pdf/gpt-5-2-eu-ai-act-public-summary-of-training-content.pdf -> HTTP 200 (ok)
+  - Regulatory reference: Article 53(1)(d), separate AI Office template
+  - Searched sources:
+    - jina-reader-3
+- CT-01 - Training duration — Context: Evidence found
+  - Reference: Annex XI §1(2)(d), Form, Computational resources
+  - Evidence sufficient: Provider gives a duration or documented duration range and identifies the training phase covered.
+  - Source ID: jina-reader-3
+  - Quote: some data collected no later than August 2025
+  - Source: Jina Reader
+  - Source URL: https://cdn.openai.com/pdf/gpt-5-2-eu-ai-act-public-summary-of-training-content.pdf
+  - Link check: https://cdn.openai.com/pdf/gpt-5-2-eu-ai-act-public-summary-of-training-content.pdf -> HTTP 200 (ok)
+  - Regulatory reference: Annex XI §1(2)(d), Form, Computational resources
+  - Searched sources:
+    - jina-reader-3
+- CT-02 - Training compute — Context: Not found
+  - Reference: Annex XI §1(2)(d), Form, Computational resources
+  - Evidence sufficient: Provider gives a model-specific compute amount or range with units and phase. Hardware type alone is partial.
+  - Gap explanation: No training compute figure or context is provided in the supplied evidence.
+  - Regulatory reference: Annex XI §1(2)(d), Form, Computational resources
+  - Failure reason: No training compute figure or context is provided in the supplied evidence.
+- CT-03 - Training energy — Context: Not found
+  - Reference: Annex XI §1(2)(e), Form, Energy consumption
+  - Evidence sufficient: Provider gives a model-specific energy amount with units and scope. A documented reason why it cannot estimate energy is recorded separately as partial evidence.
+  - Gap explanation: No training energy figure or context is provided in the supplied evidence.
+  - Regulatory reference: Annex XI §1(2)(e), Form, Energy consumption
+  - Failure reason: No training energy figure or context is provided in the supplied evidence.
+
+### Prioritised provider questions
+- 1. Access terms are only described for Codex surfaces and paid ChatGPT users; no full licence or general access terms are provided here. [DS-02]
+- 2. No parameter count or comparable size figure is given in the supplied evidence. [TP-02]
+- 3. Quoted text was not supported by the extracted source text. [TP-03]
+- 4. No input/output length limits or context-window limits are stated in the supplied evidence. [TP-04]
+- 5. The evidence notes risk and careful deployment, but does not state explicit use restrictions. [US-02]
+- 6. Quoted text was not supported by the extracted source text. [US-03]
+- 7. No training compute figure or context is provided in the supplied evidence. [CT-02]
+- 8. No training energy figure or context is provided in the supplied evidence. [CT-03]
+
+### Methods and limitations
+- No limitations recorded.
+
+### Regulatory context
+- Checklist item: ID-01
+  - Retrieval query: official provider and exact model identity
+  - Retrieved references:
+    - Annex XII, point 1(h) (ai-act-annex-xii-1h)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.454572052
+      - Excerpt: The downstream-provider documentation must state the licence for the model.
+    - Annex XI, Section 1, point 1(c) (ai-act-annex-xi-1c)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.413899362
+      - Excerpt: The general description must identify the model's date of release and methods of distribution.
+    - Article 53(1)(b) (ai-act-art53-1b)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.383297056
+      - Excerpt: Providers must also prepare and keep up to date information and documentation for AI system providers who integrate the model, so they can understand capabilities and limitations and meet their own obligations; the documentation must contain at least the elements in Annex XII.
+- Checklist item: ID-02
+  - Retrieval query: release date for the exact model
+  - Retrieved references:
+    - Annex XI, Section 1, point 1(c) (ai-act-annex-xi-1c)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.511461377
+      - Excerpt: The general description must identify the model's date of release and methods of distribution.
+    - Annex XII, point 1(h) (ai-act-annex-xii-1h)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.347068518
+      - Excerpt: The downstream-provider documentation must state the licence for the model.
+    - Transparency chapter, Measure 1.1 (cop-transparency-m1-1)
+      - Official URL: https://digital-strategy.ec.europa.eu/en/policies/contents-code-gpai
+      - Document version: GPAI Code of Practice Transparency chapter, published 2025-07-10
+      - Match score: 0.294493109
+      - Excerpt: Signatories must draw up and keep up to date model documentation when they place a general-purpose AI model on the market, documenting at least the information in the Model Documentation Form and retaining earlier versions for ten years.
+- Checklist item: ID-03
+  - Retrieval query: base model or upstream checkpoint
+  - Retrieved references:
+    - Annex XII, point 1(h) (ai-act-annex-xii-1h)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.370221972
+      - Excerpt: The downstream-provider documentation must state the licence for the model.
+    - Annex XII, point 1(a) (ai-act-annex-xii-1a)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.360052288
+      - Excerpt: The downstream-provider documentation must include the tasks the model is intended to perform and the type and nature of AI systems into which it can be integrated.
+    - Transparency chapter, Measure 1.1 (cop-transparency-m1-1)
+      - Official URL: https://digital-strategy.ec.europa.eu/en/policies/contents-code-gpai
+      - Document version: GPAI Code of Practice Transparency chapter, published 2025-07-10
+      - Match score: 0.275120318
+      - Excerpt: Signatories must draw up and keep up to date model documentation when they place a general-purpose AI model on the market, documenting at least the information in the Model Documentation Form and retaining earlier versions for ten years.
+- Checklist item: DS-01
+  - Retrieval query: distribution and access for the exact model
+  - Retrieved references:
+    - Annex XI, Section 1, point 1(c) (ai-act-annex-xi-1c)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.51229912
+      - Excerpt: The general description must identify the model's date of release and methods of distribution.
+    - Annex XII, point 1(h) (ai-act-annex-xii-1h)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.437123239
+      - Excerpt: The downstream-provider documentation must state the licence for the model.
+    - Annex XI, Section 1, point 2(e) (ai-act-annex-xi-2e)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.330021322
+      - Excerpt: Providers must document the known or estimated energy consumption of the model; if it is unknown, the estimate may rely on the computational resources used.
+- Checklist item: DS-02
+  - Retrieval query: licence or access terms
+  - Retrieved references:
+    - Annex XII, point 1(h) (ai-act-annex-xii-1h)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.443716109
+      - Excerpt: The downstream-provider documentation must state the licence for the model.
+    - Annex XI, Section 1, point 1(c) (ai-act-annex-xi-1c)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.323154151
+      - Excerpt: The general description must identify the model's date of release and methods of distribution.
+    - Transparency chapter, Measure 1.2 (cop-transparency-m1-2)
+      - Official URL: https://digital-strategy.ec.europa.eu/en/policies/contents-code-gpai
+      - Document version: GPAI Code of Practice Transparency chapter, published 2025-07-10
+      - Match score: 0.31971854
+      - Excerpt: Signatories must publicly disclose contact information for the AI Office and downstream providers to request access to relevant information, provide up-to-date information on request from the AI Office, and give downstream providers the documentation they need to understand capabilities, limitations, and integration.
+- Checklist item: TP-01
+  - Retrieval query: architecture type
+  - Retrieved references:
+    - Transparency chapter, Measure 1.1 (cop-transparency-m1-1)
+      - Official URL: https://digital-strategy.ec.europa.eu/en/policies/contents-code-gpai
+      - Document version: GPAI Code of Practice Transparency chapter, published 2025-07-10
+      - Match score: 0.247879952
+      - Excerpt: Signatories must draw up and keep up to date model documentation when they place a general-purpose AI model on the market, documenting at least the information in the Model Documentation Form and retaining earlier versions for ten years.
+    - Annex XII, point 2(a) (ai-act-annex-xii-2a)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.239405811
+      - Excerpt: The documentation must describe the technical means required for the model to be integrated into AI systems.
+    - Article 53(1)(a) (ai-act-art53-1a)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.209348947
+      - Excerpt: Providers of general-purpose AI models must draw up and keep up to date technical documentation for the model, including its training and testing process and evaluation results, with the minimum information set out in Annex XI for the AI Office and national competent authorities.
+- Checklist item: TP-02
+  - Retrieval query: parameter count
+  - Retrieved references:
+    - Annex XII, point 2(b) (ai-act-annex-xii-2b)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.274666965
+      - Excerpt: The documentation must include the modality and format of inputs and outputs and their maximum size, such as context window length.
+    - Annex XI, Section 1, point 2(e) (ai-act-annex-xi-2e)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.234908402
+      - Excerpt: Providers must document the known or estimated energy consumption of the model; if it is unknown, the estimate may rely on the computational resources used.
+    - Article 53(1)(b) (ai-act-art53-1b)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.17974329
+      - Excerpt: Providers must also prepare and keep up to date information and documentation for AI system providers who integrate the model, so they can understand capabilities and limitations and meet their own obligations; the documentation must contain at least the elements in Annex XII.
+- Checklist item: TP-03
+  - Retrieval query: input and output modalities
+  - Retrieved references:
+    - Annex XII, point 2(b) (ai-act-annex-xii-2b)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.524266362
+      - Excerpt: The documentation must include the modality and format of inputs and outputs and their maximum size, such as context window length.
+    - Annex XII, point 2(a) (ai-act-annex-xii-2a)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.251989394
+      - Excerpt: The documentation must describe the technical means required for the model to be integrated into AI systems.
+    - Annex XII, point 1(a) (ai-act-annex-xii-1a)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.234923229
+      - Excerpt: The downstream-provider documentation must include the tasks the model is intended to perform and the type and nature of AI systems into which it can be integrated.
+- Checklist item: TP-04
+  - Retrieval query: input and output limits
+  - Retrieved references:
+    - Annex XII, point 2(b) (ai-act-annex-xii-2b)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.470683
+      - Excerpt: The documentation must include the modality and format of inputs and outputs and their maximum size, such as context window length.
+    - Annex XI, Section 1, point 2(e) (ai-act-annex-xi-2e)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.284010649
+      - Excerpt: Providers must document the known or estimated energy consumption of the model; if it is unknown, the estimate may rely on the computational resources used.
+    - Article 53(1)(b) (ai-act-art53-1b)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.224147514
+      - Excerpt: Providers must also prepare and keep up to date information and documentation for AI system providers who integrate the model, so they can understand capabilities and limitations and meet their own obligations; the documentation must contain at least the elements in Annex XII.
+- Checklist item: US-01
+  - Retrieval query: intended uses and representative tasks
+  - Retrieved references:
+    - Annex XII, point 1(a) (ai-act-annex-xii-1a)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.393914938
+      - Excerpt: The downstream-provider documentation must include the tasks the model is intended to perform and the type and nature of AI systems into which it can be integrated.
+    - Article 53(1)(d) (ai-act-art53-1d)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.345913082
+      - Excerpt: Providers must draw up and publicly make available a sufficiently detailed summary of the content used for training the general-purpose AI model using the AI Office template.
+    - Article 53(1)(b) (ai-act-art53-1b)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.284999311
+      - Excerpt: Providers must also prepare and keep up to date information and documentation for AI system providers who integrate the model, so they can understand capabilities and limitations and meet their own obligations; the documentation must contain at least the elements in Annex XII.
+- Checklist item: US-02
+  - Retrieval query: restrictions on use
+  - Retrieved references:
+    - Annex XII, point 1(h) (ai-act-annex-xii-1h)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.302572
+      - Excerpt: The downstream-provider documentation must state the licence for the model.
+    - Annex XI, Section 1, point 1(c) (ai-act-annex-xi-1c)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.301776946
+      - Excerpt: The general description must identify the model's date of release and methods of distribution.
+    - Transparency chapter, Measure 1.2 (cop-transparency-m1-2)
+      - Official URL: https://digital-strategy.ec.europa.eu/en/policies/contents-code-gpai
+      - Document version: GPAI Code of Practice Transparency chapter, published 2025-07-10
+      - Match score: 0.257617235
+      - Excerpt: Signatories must publicly disclose contact information for the AI Office and downstream providers to request access to relevant information, provide up-to-date information on request from the AI Office, and give downstream providers the documentation they need to understand capabilities, limitations, and integration.
+- Checklist item: US-03
+  - Retrieval query: official integration instructions and API call
+  - Retrieved references:
+    - Transparency chapter, Measure 1.2 (cop-transparency-m1-2)
+      - Official URL: https://digital-strategy.ec.europa.eu/en/policies/contents-code-gpai
+      - Document version: GPAI Code of Practice Transparency chapter, published 2025-07-10
+      - Match score: 0.384587944
+      - Excerpt: Signatories must publicly disclose contact information for the AI Office and downstream providers to request access to relevant information, provide up-to-date information on request from the AI Office, and give downstream providers the documentation they need to understand capabilities, limitations, and integration.
+    - Annex XII, point 2(a) (ai-act-annex-xii-2a)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.350031376
+      - Excerpt: The documentation must describe the technical means required for the model to be integrated into AI systems.
+    - Annex XII, point 1(a) (ai-act-annex-xii-1a)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.318665326
+      - Excerpt: The downstream-provider documentation must include the tasks the model is intended to perform and the type and nature of AI systems into which it can be integrated.
+- Checklist item: DT-01
+  - Retrieval query: training data types and provenance
+  - Retrieved references:
+    - Annex XII, point 2(c) (ai-act-annex-xii-2c)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.618482351
+      - Excerpt: The documentation must cover the data used for training, testing and validation, including type, provenance and curation methodology.
+    - Article 53(1)(a) (ai-act-art53-1a)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.354913831
+      - Excerpt: Providers of general-purpose AI models must draw up and keep up to date technical documentation for the model, including its training and testing process and evaluation results, with the minimum information set out in Annex XI for the AI Office and national competent authorities.
+    - Article 53(1)(d) (ai-act-art53-1d)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.33577013
+      - Excerpt: Providers must draw up and publicly make available a sufficiently detailed summary of the content used for training the general-purpose AI model using the AI Office template.
+- Checklist item: DT-02
+  - Retrieval query: training data curation
+  - Retrieved references:
+    - Annex XII, point 2(c) (ai-act-annex-xii-2c)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.564929366
+      - Excerpt: The documentation must cover the data used for training, testing and validation, including type, provenance and curation methodology.
+    - Article 53(1)(d) (ai-act-art53-1d)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.378910601
+      - Excerpt: Providers must draw up and publicly make available a sufficiently detailed summary of the content used for training the general-purpose AI model using the AI Office template.
+    - Article 53(1)(a) (ai-act-art53-1a)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.343512
+      - Excerpt: Providers of general-purpose AI models must draw up and keep up to date technical documentation for the model, including its training and testing process and evaluation results, with the minimum information set out in Annex XI for the AI Office and national competent authorities.
+- Checklist item: DT-03
+  - Retrieval query: public summary of training content
+  - Retrieved references:
+    - Article 53(1)(d) support (ai-act-training-summary-template)
+      - Official URL: https://digital-strategy.ec.europa.eu/en/faqs/template-general-purpose-ai-model-providers-summarise-their-training-content
+      - Document version: Commission template page, last update 2026-11-10
+      - Match score: 0.557662964
+      - Excerpt: The Commission template and explanatory notice facilitate compliance with the public summary of training content requirement under Article 53(1)(d).
+    - Article 53(1)(d) (ai-act-art53-1d)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.518379331
+      - Excerpt: Providers must draw up and publicly make available a sufficiently detailed summary of the content used for training the general-purpose AI model using the AI Office template.
+    - Annex XII, point 2(c) (ai-act-annex-xii-2c)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.462982029
+      - Excerpt: The documentation must cover the data used for training, testing and validation, including type, provenance and curation methodology.
+- Checklist item: CT-01
+  - Retrieval query: training duration
+  - Retrieved references:
+    - Article 53(1)(d) support (ai-act-training-summary-template)
+      - Official URL: https://digital-strategy.ec.europa.eu/en/faqs/template-general-purpose-ai-model-providers-summarise-their-training-content
+      - Document version: Commission template page, last update 2026-11-10
+      - Match score: 0.32523492
+      - Excerpt: The Commission template and explanatory notice facilitate compliance with the public summary of training content requirement under Article 53(1)(d).
+    - Article 53(1)(d) (ai-act-art53-1d)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.264995784
+      - Excerpt: Providers must draw up and publicly make available a sufficiently detailed summary of the content used for training the general-purpose AI model using the AI Office template.
+    - Annex XII, point 2(b) (ai-act-annex-xii-2b)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.241084188
+      - Excerpt: The documentation must include the modality and format of inputs and outputs and their maximum size, such as context window length.
+- Checklist item: CT-02
+  - Retrieval query: training compute
+  - Retrieved references:
+    - Article 53(1)(d) (ai-act-art53-1d)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.316365838
+      - Excerpt: Providers must draw up and publicly make available a sufficiently detailed summary of the content used for training the general-purpose AI model using the AI Office template.
+    - Article 53(1)(d) support (ai-act-training-summary-template)
+      - Official URL: https://digital-strategy.ec.europa.eu/en/faqs/template-general-purpose-ai-model-providers-summarise-their-training-content
+      - Document version: Commission template page, last update 2026-11-10
+      - Match score: 0.293111563
+      - Excerpt: The Commission template and explanatory notice facilitate compliance with the public summary of training content requirement under Article 53(1)(d).
+    - Article 53(1)(a) (ai-act-art53-1a)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.288604349
+      - Excerpt: Providers of general-purpose AI models must draw up and keep up to date technical documentation for the model, including its training and testing process and evaluation results, with the minimum information set out in Annex XI for the AI Office and national competent authorities.
+- Checklist item: CT-03
+  - Retrieval query: training energy
+  - Retrieved references:
+    - Annex XI, Section 1, point 2(e) (ai-act-annex-xi-2e)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.369108081
+      - Excerpt: Providers must document the known or estimated energy consumption of the model; if it is unknown, the estimate may rely on the computational resources used.
+    - Article 53(1)(d) support (ai-act-training-summary-template)
+      - Official URL: https://digital-strategy.ec.europa.eu/en/faqs/template-general-purpose-ai-model-providers-summarise-their-training-content
+      - Document version: Commission template page, last update 2026-11-10
+      - Match score: 0.285226703
+      - Excerpt: The Commission template and explanatory notice facilitate compliance with the public summary of training content requirement under Article 53(1)(d).
+    - Article 53(1)(d) (ai-act-art53-1d)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.250412226
+      - Excerpt: Providers must draw up and publicly make available a sufficiently detailed summary of the content used for training the general-purpose AI model using the AI Office template.
