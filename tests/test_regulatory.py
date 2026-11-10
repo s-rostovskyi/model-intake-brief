@@ -16,7 +16,7 @@ class FakeResponse:
         return self._payload
 
 
-def test_corpus_manifest_keeps_blocked_transparency_text_out():
+def test_corpus_manifest_includes_verified_transparency_measures():
     manifest = regulatory.corpus_manifest()
 
     assert manifest['corpus_version'] == regulatory.CORPUS_VERSION
@@ -27,7 +27,11 @@ def test_corpus_manifest_keeps_blocked_transparency_text_out():
     assert 'ai-act-art53-1a' in chunk_ids
     assert 'cop-transparency-m1-1' in chunk_ids
     assert 'cop-transparency-m1-2' in chunk_ids
-    assert any(chunk['status'] == 'blocked' and chunk['text'] is None for chunk in manifest['chunks'])
+    transparency_chunks = [chunk for chunk in manifest['chunks'] if chunk['chunk_id'].startswith('cop-transparency-')]
+    assert len(transparency_chunks) == 2
+    assert all(chunk['text'] for chunk in transparency_chunks)
+    assert all(chunk['extraction_source'] for chunk in transparency_chunks)
+    assert all(chunk['status'] == 'verified' for chunk in transparency_chunks)
 
 
 def test_index_regulatory_corpus_uses_stable_ids_and_namespace(monkeypatch):
@@ -61,7 +65,7 @@ def test_index_regulatory_corpus_uses_stable_ids_and_namespace(monkeypatch):
 
     verified_chunks = [chunk for chunk in regulatory.build_regulatory_corpus() if chunk.text]
     assert report['indexed'] == len(verified_chunks)
-    assert report['skipped_blocked'] == 2
+    assert report['skipped_blocked'] == 0
     assert report['compatible'] is True
     assert report['needed'] == []
     assert captured['json']['namespace'] == regulatory.PINECONE_NAMESPACE

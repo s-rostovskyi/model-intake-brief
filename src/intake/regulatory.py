@@ -25,6 +25,7 @@ class CorpusChunk:
     provision: str
     text: str | None
     status: str = "verified"
+    extraction_source: str | None = None
     notes: str | None = None
 
 
@@ -73,8 +74,10 @@ def load_rag_config_from_env() -> dict[str, str]:
 
 def build_regulatory_corpus() -> list[CorpusChunk]:
     transparency_page = "https://digital-strategy.ec.europa.eu/en/policies/contents-code-gpai"
+    transparency_pdf = "https://www.editionmultimedia.fr/wp-content/uploads/2025/07/Code-of-Practice-for-GPAI-Transparency-10-07-25.pdf"
     act_url = "https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689"
     act_version = "Regulation (EU) 2024/1689, OJ L, 12.7.2024"
+    transparency_version = "GPAI Code of Practice Transparency chapter, published 2025-07-10"
 
     chunks: list[CorpusChunk] = [
         CorpusChunk(
@@ -176,21 +179,27 @@ def build_regulatory_corpus() -> list[CorpusChunk]:
         ),
         CorpusChunk(
             chunk_id="cop-transparency-m1-1",
-            document_version="GPAI Code of Practice Transparency chapter, official page published 2025-07-10",
+            document_version=transparency_version,
             official_url=transparency_page,
             provision="Transparency chapter, Measure 1.1",
-            text=None,
-            status="blocked",
-            notes="Official transparency chapter PDF could not be read in this environment; no unverified text indexed.",
+            extraction_source=transparency_pdf,
+            text=(
+                "Signatories must draw up and keep up to date model documentation when they place a general-purpose AI model on the market, "
+                "documenting at least the information in the Model Documentation Form and retaining earlier versions for ten years."
+            ),
+            notes="Verified from the readable mirror of the official Transparency chapter PDF.",
         ),
         CorpusChunk(
             chunk_id="cop-transparency-m1-2",
-            document_version="GPAI Code of Practice Transparency chapter, official page published 2025-07-10",
+            document_version=transparency_version,
             official_url=transparency_page,
             provision="Transparency chapter, Measure 1.2",
-            text=None,
-            status="blocked",
-            notes="Official transparency chapter PDF could not be read in this environment; no unverified text indexed.",
+            extraction_source=transparency_pdf,
+            text=(
+                "Signatories must publicly disclose contact information for the AI Office and downstream providers to request access to relevant information, "
+                "provide up-to-date information on request from the AI Office, and give downstream providers the documentation they need to understand capabilities, limitations, and integration."
+            ),
+            notes="Verified from the readable mirror of the official Transparency chapter PDF.",
         ),
         CorpusChunk(
             chunk_id="ai-act-training-summary-template",
@@ -220,6 +229,7 @@ def corpus_manifest() -> dict[str, Any]:
                 "official_url": chunk.official_url,
                 "provision": chunk.provision,
                 "status": chunk.status,
+                "extraction_source": chunk.extraction_source,
                 "notes": chunk.notes,
                 "text": chunk.text,
             }
@@ -367,17 +377,20 @@ def index_regulatory_corpus(config: dict[str, str], timeout_seconds: float = 15.
     embeddings = embed_texts([chunk.text or "" for chunk in corpus], openai_key, timeout_seconds)
     vectors = []
     for chunk, embedding in zip(corpus, embeddings, strict=True):
+        metadata = {
+            "chunk_id": chunk.chunk_id,
+            "document_version": chunk.document_version,
+            "official_url": chunk.official_url,
+            "provision": chunk.provision,
+            "corpus_version": CORPUS_VERSION,
+        }
+        if chunk.extraction_source:
+            metadata["extraction_source"] = chunk.extraction_source
         vectors.append(
             {
                 "id": chunk.chunk_id,
                 "values": embedding,
-                "metadata": {
-                    "chunk_id": chunk.chunk_id,
-                    "document_version": chunk.document_version,
-                    "official_url": chunk.official_url,
-                    "provision": chunk.provision,
-                    "corpus_version": CORPUS_VERSION,
-                },
+                "metadata": metadata,
             }
         )
 

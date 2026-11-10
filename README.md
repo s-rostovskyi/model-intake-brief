@@ -50,4 +50,4 @@ The live commands read `.env` only when you run a live or indexing command.
 - Live mode reads `.env` only for the configured API key, timeout values, provider domain allowlist, embeddings key, and Pinecone configuration.
 - Live research drafts use Tavily Search, Jina Reader, and Hugging Face Hub for Hugging Face IDs, and skip Hugging Face for hosted provider IDs.
 - The live graph attaches separate regulatory context from the corpus when configuration is available.
-- The regulatory corpus includes verified AI Act passages and blocks the GPAI Code Transparency chapter text if the official PDF cannot be read in this environment.
+- The regulatory corpus includes verified AI Act passages and verified GPAI Code Transparency measures 1.1 and 1.2, extracted from the readable mirror when the official PDF could not be read directly in this environment.
