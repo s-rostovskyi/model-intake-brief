@@ -21,6 +21,8 @@ Use the existing Miniconda interpreter and leave `.venv` untouched.
 
 - Hugging Face live draft: `C:\Users\serge\miniconda3\python.exe -m intake run --live --model Qwen/Qwen3-8B`
 - Hosted live draft: `C:\Users\serge\miniconda3\python.exe -m intake run --live --provider openai --model gpt-5.2-2025-12-11`
+- Full Qwen sample report: `C:\Users\serge\miniconda3\python.exe -m intake run --live --model Qwen/Qwen3-8B > samples/qwen3-8b.md`
+- UTF-8 capture path: `C:\Users\serge\miniconda3\python.exe -m intake run --model Qwen/Qwen3-8B | Out-File -Encoding utf8 .\tmp\qwen3-8b-отчет.md`
 
 ### Regulatory RAG
 
@@ -37,6 +39,7 @@ The live commands read `.env` only when you run a live or indexing command.
 - `INTAKE_TAVILY_TIMEOUT_SECONDS`
 - `INTAKE_JINA_TIMEOUT_SECONDS`
 - `INTAKE_HF_TIMEOUT_SECONDS`
+- `INTAKE_ASSESSMENT_TIMEOUT_SECONDS`
 - `INTAKE_RAG_TIMEOUT_SECONDS`
 - `OPENAI_API_KEY`
 - `PINECONE_API_KEY`
@@ -47,7 +50,8 @@ The live commands read `.env` only when you run a live or indexing command.
 ## Current behavior
 
 - Offline mode does not read `.env` and keeps the deterministic fixture draft.
-- Live mode reads `.env` only for the configured API key, timeout values, provider domain allowlist, embeddings key, and Pinecone configuration.
+- Live mode reads `.env` only for the configured API key, timeout values, provider domain allowlist, embeddings key, assessment timeout, and Pinecone configuration.
 - Live research drafts use Tavily Search, Jina Reader, and Hugging Face Hub for Hugging Face IDs, and skip Hugging Face for hosted provider IDs.
+- The Day 3 report uses `gpt-5.4-mini` for structured evidence assessment, keeps model-provider attribution separate from the hosting platform, writes the final Markdown to stdout, and renders `## Full report` for a successful live run while preserving partial and offline labels when needed.
 - The live graph attaches separate regulatory context from the corpus when configuration is available.
 - The regulatory corpus includes verified AI Act passages and verified GPAI Code Transparency measures 1.1 and 1.2, extracted from the readable mirror when the official PDF could not be read directly in this environment.

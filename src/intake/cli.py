@@ -24,17 +24,17 @@ def build_parser() -> argparse.ArgumentParser:
 def run_command(args: argparse.Namespace) -> int:
     result = APP.invoke({'live_mode': bool(args.live), 'provider': args.provider, 'model': args.model})
 
+    report_markdown = result.get('report_markdown')
     error = result.get('error')
+    if report_markdown:
+        print(report_markdown)
     if error:
         print(error, file=sys.stderr)
         return 2
-
-    report_markdown = result.get('report_markdown')
     if not report_markdown:
         print('Report generation failed.', file=sys.stderr)
         return 1
 
-    print(report_markdown)
     return 0
 
 

@@ -134,3 +134,59 @@ def test_retrieve_regulatory_context_returns_expected_provisions(monkeypatch):
     assert downstream_result.hits[0].chunk_id == 'ai-act-art53-1b'
     assert training_result.hits[0].provision == 'Article 53(1)(d)'
     assert training_result.hits[0].chunk_id == 'ai-act-art53-1d'
+
+
+def test_retrieve_regulatory_context_batch_uses_one_embedding_call(monkeypatch):
+    captured: dict[str, object] = {}
+
+    def fake_describe_index(index_name, api_key, api_version=None, timeout_seconds=15.0):
+        return {'dimension': regulatory.OPENAI_EMBEDDING_DIMENSION, 'host': 'regulatory-index.svc.pinecone.io'}
+
+    def fake_embed_texts(texts, api_key, timeout_seconds):
+        captured['texts'] = list(texts)
+        return [[0.3] * regulatory.OPENAI_EMBEDDING_DIMENSION for _ in texts]
+
+    def fake_post(url, headers=None, json=None, timeout=None):
+        index = len(captured.get('calls', []))
+        captured.setdefault('calls', []).append(json)
+        if index == 0:
+            provision = 'Article 53(1)(b)'
+            chunk_id = 'ai-act-art53-1b'
+        else:
+            provision = 'Article 53(1)(d)'
+            chunk_id = 'ai-act-art53-1d'
+        return FakeResponse(
+            {
+                'matches': [
+                    {
+                        'id': chunk_id,
+                        'score': 0.9,
+                        'metadata': {
+                            'chunk_id': chunk_id,
+                            'document_version': 'Regulation (EU) 2024/1689, OJ L, 12.7.2024',
+                            'official_url': 'https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689',
+                            'provision': provision,
+                            'excerpt': 'Excerpt',
+                        },
+                    }
+                ]
+            }
+        )
+
+    monkeypatch.setattr(regulatory, 'describe_index', fake_describe_index)
+    monkeypatch.setattr(regulatory, 'embed_texts', fake_embed_texts)
+    monkeypatch.setattr(regulatory.requests, 'post', fake_post)
+
+    results = regulatory.retrieve_regulatory_context_batch(
+        ['US-03', 'DT-03'],
+        {
+            'OPENAI_API_KEY': 'oa-test',
+            'PINECONE_API_KEY': 'pc-test',
+            'PINECONE_INDEX_NAME': 'regulatory-index',
+            'PINECONE_NAMESPACE': regulatory.PINECONE_NAMESPACE,
+        },
+    )
+
+    assert captured['texts'] == ['official integration instructions and API call', 'public summary of training content']
+    assert results['US-03'].hits[0].provision == 'Article 53(1)(b)'
+    assert results['DT-03'].hits[0].provision == 'Article 53(1)(d)'

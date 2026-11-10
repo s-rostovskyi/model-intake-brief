@@ -409,35 +409,20 @@ def _make_query_vector(query: str, api_key: str, timeout_seconds: float) -> list
     return embed_texts([query], api_key, timeout_seconds)[0]
 
 
-def retrieve_regulatory_context(
-    query: str,
-    config: dict[str, str],
-    item_id: str | None = None,
-    timeout_seconds: float = 15.0,
-    top_k: int = 3,
-) -> RetrievalResult:
-    status = resolve_index_status(config, timeout_seconds=timeout_seconds)
-    blockers = list(status.blockers)
-    if not status.configured:
-        blockers.append("Pinecone configuration is incomplete.")
-        return RetrievalResult(query=query, item_id=item_id, hits=[], blockers=blockers)
-    if not status.compatible:
-        blockers.append("Configured Pinecone index dimension is incompatible with text-embedding-3-small.")
-        return RetrievalResult(query=query, item_id=item_id, hits=[], blockers=blockers)
-
-    openai_key = config.get("OPENAI_API_KEY")
-    if not openai_key:
-        blockers.append("OPENAI_API_KEY is required for retrieval embeddings.")
-        return RetrievalResult(query=query, item_id=item_id, hits=[], blockers=blockers)
-
-    api_key = config["PINECONE_API_KEY"]
-    index_info = describe_index(status.index_name, api_key, config.get("PINECONE_API_VERSION"), timeout_seconds)
-    query_vector = _make_query_vector(query, openai_key, timeout_seconds)
+def _query_regulatory_hits(
+    index_info: dict[str, Any],
+    namespace: str,
+    api_key: str,
+    api_version: str | None,
+    query_vector: list[float],
+    timeout_seconds: float,
+    top_k: int,
+) -> tuple[list[RetrievalHit], list[str]]:
     response = requests.post(
         _pinecone_query_url(index_info),
-        headers=_pinecone_headers(api_key, config.get("PINECONE_API_VERSION")),
+        headers=_pinecone_headers(api_key, api_version),
         json={
-            "namespace": status.namespace,
+            "namespace": namespace,
             "vector": query_vector,
             "topK": top_k,
             "includeMetadata": True,
@@ -448,7 +433,7 @@ def retrieve_regulatory_context(
     payload = response.json()
     matches = payload.get("matches")
     if not isinstance(matches, list):
-        return RetrievalResult(query=query, item_id=item_id, hits=[], blockers=["Pinecone query response did not contain matches."])
+        return [], ["Pinecone query response did not contain matches."]
 
     hits: list[RetrievalHit] = []
     for match in matches:
@@ -475,15 +460,108 @@ def retrieve_regulatory_context(
                 excerpt=str(excerpt),
             )
         )
+    return hits, []
 
-    return RetrievalResult(query=query, item_id=item_id, hits=hits, blockers=blockers)
+
+def retrieve_regulatory_context(
+    query: str,
+    config: dict[str, str],
+    item_id: str | None = None,
+    timeout_seconds: float = 15.0,
+    top_k: int = 3,
+) -> RetrievalResult:
+    status = resolve_index_status(config, timeout_seconds=timeout_seconds)
+    blockers = list(status.blockers)
+    if not status.configured:
+        blockers.append("Pinecone configuration is incomplete.")
+        return RetrievalResult(query=query, item_id=item_id, hits=[], blockers=blockers)
+    if not status.compatible:
+        blockers.append("Configured Pinecone index dimension is incompatible with text-embedding-3-small.")
+        return RetrievalResult(query=query, item_id=item_id, hits=[], blockers=blockers)
+
+    openai_key = config.get("OPENAI_API_KEY")
+    if not openai_key:
+        blockers.append("OPENAI_API_KEY is required for retrieval embeddings.")
+        return RetrievalResult(query=query, item_id=item_id, hits=[], blockers=blockers)
+
+    api_key = config["PINECONE_API_KEY"]
+    index_info = describe_index(status.index_name, api_key, config.get("PINECONE_API_VERSION"), timeout_seconds)
+    query_vector = _make_query_vector(query, openai_key, timeout_seconds)
+    hits, query_blockers = _query_regulatory_hits(
+        index_info,
+        status.namespace,
+        api_key,
+        config.get("PINECONE_API_VERSION"),
+        query_vector,
+        timeout_seconds,
+        top_k,
+    )
+    return RetrievalResult(query=query, item_id=item_id, hits=hits, blockers=blockers + query_blockers)
+
+
+def retrieve_regulatory_context_batch(
+    item_ids: list[str | None],
+    config: dict[str, str],
+    timeout_seconds: float = 15.0,
+    top_k: int = 3,
+) -> dict[str | None, RetrievalResult]:
+    status = resolve_index_status(config, timeout_seconds=timeout_seconds)
+    blockers = list(status.blockers)
+    results: dict[str | None, RetrievalResult] = {}
+    for item_id in item_ids:
+        query = default_query_for_item(item_id)
+        if not status.configured:
+            results[item_id] = RetrievalResult(query=query, item_id=item_id, hits=[], blockers=blockers + ["Pinecone configuration is incomplete."])
+            continue
+        if not status.compatible:
+            results[item_id] = RetrievalResult(query=query, item_id=item_id, hits=[], blockers=blockers + ["Configured Pinecone index dimension is incompatible with text-embedding-3-small."])
+            continue
+
+    openai_key = config.get("OPENAI_API_KEY")
+    if not openai_key:
+        for item_id in item_ids:
+            query = default_query_for_item(item_id)
+            results[item_id] = RetrievalResult(query=query, item_id=item_id, hits=[], blockers=blockers + ["OPENAI_API_KEY is required for retrieval embeddings."])
+        return results
+
+    api_key = config["PINECONE_API_KEY"]
+    index_info = describe_index(status.index_name, api_key, config.get("PINECONE_API_VERSION"), timeout_seconds)
+    queries = [default_query_for_item(item_id) for item_id in item_ids]
+    embeddings = embed_texts(queries, openai_key, timeout_seconds)
+    for item_id, query, query_vector in zip(item_ids, queries, embeddings, strict=True):
+        hits, query_blockers = _query_regulatory_hits(
+            index_info,
+            status.namespace,
+            api_key,
+            config.get("PINECONE_API_VERSION"),
+            query_vector,
+            timeout_seconds,
+            top_k,
+        )
+        results[item_id] = RetrievalResult(query=query, item_id=item_id, hits=hits, blockers=list(blockers) + query_blockers)
+    return results
 
 
 def default_query_for_item(item_id: str | None) -> str:
     mapping = {
-        "DT-03": "public summary of training content",
-        "US-03": "official integration instructions and API call",
+        "ID-01": "official provider and exact model identity",
+        "ID-02": "release date for the exact model",
+        "ID-03": "base model or upstream checkpoint",
         "DS-01": "distribution and access for the exact model",
+        "DS-02": "licence or access terms",
+        "TP-01": "architecture type",
+        "TP-02": "parameter count",
+        "TP-03": "input and output modalities",
+        "TP-04": "input and output limits",
+        "US-01": "intended uses and representative tasks",
+        "US-02": "restrictions on use",
+        "US-03": "official integration instructions and API call",
+        "DT-01": "training data types and provenance",
+        "DT-02": "training data curation",
+        "DT-03": "public summary of training content",
+        "CT-01": "training duration",
+        "CT-02": "training compute",
+        "CT-03": "training energy",
     }
     return mapping.get(item_id or "", "relevant regulatory context")
 

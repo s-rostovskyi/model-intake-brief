@@ -1,0 +1,626 @@
+# Model Intake Brief
+
+## Full report
+
+- Exact model ID: `Qwen/Qwen3-8B`
+- Model provider: Qwen
+- Hosting platform: Hugging Face
+- Target kind: hugging_face
+- Checklist version: v0.1
+- Run date: 2026-11-10
+- Notice: Information, not legal advice.
+- Assessment request output token cap: 4000
+- Assessment request usage: input tokens 8036, output tokens 3568
+- Aggregate assessment usage: input tokens 8036, output tokens 3568
+
+### Summary
+- Headline: Public evidence supports the model identity, access, architecture, size, modalities, limits, usage, and some technical details, but key provenance and training-data fields remain weak or missing.
+- Evidence found: 5
+- Partial: 4
+- Not found: 9
+- Not checked: 0
+- Major gaps:
+  - No direct evidence for release date of Qwen/Qwen3-8B.
+  - No model-specific training data provenance, curation, or public training-content summary for the target model.
+  - No model-specific training duration, compute, or energy evidence.
+
+### Source collection
+- Tavily Search: HTTP 200; usable data: yes
+  - Requested URL: https://api.tavily.com/search
+  - Source URLs:
+    - https://huggingface.co/Qwen/Qwen3-8B
+    - https://huggingface.co/Qwen/Qwen3.8-2.4T-A95B
+    - https://huggingface.co/Qwen/Qwen3-VL-8B-Instruct
+  - Search snippet (candidate material only): Hugging Face's logo # Qwen / Qwen3-8B like 1.34k Follow Qwen 103k ### Instructions to use Qwen/Qwen3-8B with libraries, inference providers, notebooks, and local apps. Follow these links to get started. How to use Qwen/Qwen3-8B with Transf…
+  - Metadata:
+    - result_count: 3
+- Tavily Search: HTTP 200; usable data: yes
+  - Requested URL: https://api.tavily.com/search
+  - Source URLs:
+    - https://huggingface.co/Qwen/Qwen3-8B
+    - https://huggingface.co/Qwen/Qwen3.8-Flash-Next/discussions/18
+    - https://huggingface.co/Qwen/Qwen3.5-0.8B
+  - Search snippet (candidate material only): The endpoint provided by Alibaba Model Studio supports dynamic YaRN by default and no extra configuration is needed. ## Best Practices To achieve optimal performance, we recommend the following settings: Sampling Parameters: `enable_thinki…
+  - Metadata:
+    - result_count: 3
+- Hugging Face Hub: HTTP 200; usable data: yes
+  - Requested URL: https://huggingface.co/api/models/Qwen/Qwen3-8B
+  - Metadata:
+    - modelId: Qwen/Qwen3-8B
+    - pipeline_tag: text-generation
+    - license: apache-2.0
+    - license_url: https://huggingface.co/Qwen/Qwen3-8B/blob/main/LICENSE
+    - author: Qwen
+    - downloads: 6837564
+    - likes: 2180
+    - private: False
+- Jina Reader: HTTP 200; usable data: yes
+  - Requested URL: https://huggingface.co/Qwen/Qwen3-8B
+  - Extracted text: Title: Qwen/Qwen3-8B · Hugging Face URL Source: https://huggingface.co/Qwen/Qwen3-8B Published Time: Wed, 10 Sep 2025 21:05:01 GMT Markdown Content: [![Image 1: Chat](https://img.shields.io/badge/%F0%9F%92%9C%EF%B8%8F%20Qwen%20Chat%20-536a…
+- Jina Reader: HTTP 200; usable data: yes
+  - Requested URL: https://huggingface.co/Qwen/Qwen3.8-2.4T-A95B
+  - Extracted text: Title: Qwen/Qwen3.8-2.4T-A95B · Hugging Face URL Source: https://huggingface.co/Qwen/Qwen3.8-2.4T-A95B Published Time: Wed, 10 Sep 2025 21:05:01 GMT Markdown Content: [![Image 1: Qwen Studio](https://img.shields.io/badge/Qwen%20Studio-536a…
+- Jina Reader: HTTP 200; usable data: yes
+  - Requested URL: https://huggingface.co/Qwen/Qwen3-VL-8B-Instruct
+  - Extracted text: Title: Qwen/Qwen3-VL-8B-Instruct · Hugging Face URL Source: https://huggingface.co/Qwen/Qwen3-VL-8B-Instruct Published Time: Wed, 10 Sep 2025 21:05:01 GMT Markdown Content: [![Image 1: Chat](https://img.shields.io/badge/%F0%9F%92%9C%EF%B8%…
+
+### Findings
+- ID-01 — Provider and model identity: Partial
+  - Reference: Form, General information
+  - Evidence sufficient: Official documentation identifies the provider and the exact model or version. A family name alone is partial.
+  - Summary: The target model is explicitly identified as Qwen/Qwen3-8B by Hugging Face.
+  - Source: Jina Reader
+  - Source URL: https://huggingface.co/Qwen/Qwen3-8B
+  - Source section: Title / model overview
+  - Link check: https://huggingface.co/Qwen/Qwen3-8B -> HTTP 200 (ok)
+  - Regulatory reference: Form, General information
+  - Searched sources:
+    - https://huggingface.co/Qwen/Qwen3-8B
+    - https://api.tavily.com/search
+  - Failure reason: Quoted text was not supported by the extracted source text.
+- ID-02 — Release date: Not found
+  - Reference: Annex XII §1(c), Form, General information
+  - Evidence sufficient: Provider identifies when the target model first became available. A repository modification date alone is insufficient.
+  - Summary: No provided source states when Qwen/Qwen3-8B first became available.
+  - Model applicability: Target model only.
+  - Link check: https://huggingface.co/Qwen/Qwen3-8B -> HTTP 200 (ok)
+  - Regulatory reference: Annex XII §1(c), Form, General information
+  - Searched sources:
+    - https://huggingface.co/Qwen/Qwen3-8B
+    - https://huggingface.co/api/models/Qwen/Qwen3-8B
+  - Failure reason: Available evidence shows repository metadata and a published time on the page capture, but not the model’s first release date.
+- ID-03 — Base model dependencies: Not found
+  - Reference: Form, General information
+  - Evidence sufficient: Exact upstream model or checkpoint is named, or the provider explicitly states that the model is not a modification or fine-tune of a prior model.
+  - Summary: No source names an upstream base checkpoint for Qwen/Qwen3-8B or explicitly says it is not a modification.
+  - Model applicability: Target model only.
+  - Link check: https://huggingface.co/Qwen/Qwen3-8B -> HTTP 200 (ok)
+  - Regulatory reference: Form, General information
+  - Searched sources:
+    - https://huggingface.co/Qwen/Qwen3-8B
+    - https://api.tavily.com/search
+  - Failure reason: The provided page describes Qwen3 and usage, but does not identify a base model dependency for the exact target model.
+- DS-01 — Distribution and access: Partial
+  - Reference: Annex XII §1(c), Form, Methods of distribution and licenses
+  - Evidence sufficient: Official repository, API documentation or equivalent identifies how the exact model is accessed and whether access is to weights or a hosted service.
+  - Summary: The model repository shows Hugging Face-hosted access and local loading of the weights.
+  - Source: Jina Reader
+  - Source URL: https://huggingface.co/Qwen/Qwen3-8B
+  - Source section: Repository page / quickstart
+  - Link check: https://huggingface.co/Qwen/Qwen3-8B -> HTTP 200 (ok)
+  - Regulatory reference: Annex XII §1(c), Form, Methods of distribution and licenses
+  - Searched sources:
+    - https://huggingface.co/Qwen/Qwen3-8B
+    - https://api.tavily.com/search
+  - Failure reason: Quoted text was not supported by the extracted source text.
+- DS-02 — Licence or access terms: Partial
+  - Reference: Annex XII §1(h), Form, Methods of distribution and licenses
+  - Evidence sufficient: Applicable licence text or service terms are linked from official documentation and can be tied to this distribution channel.
+  - Summary: The repository links the applicable license for this distribution channel.
+  - Source: Hugging Face Hub
+  - Source URL: https://huggingface.co/api/models/Qwen/Qwen3-8B
+  - Source section: Model metadata
+  - Link check: https://huggingface.co/Qwen/Qwen3-8B/blob/main/LICENSE -> HTTP 200 (ok)
+  - Regulatory reference: Annex XII §1(h), Form, Methods of distribution and licenses
+  - Searched sources:
+    - https://huggingface.co/api/models/Qwen/Qwen3-8B
+    - https://huggingface.co/Qwen/Qwen3-8B
+  - Failure reason: Quoted text was not supported by the extracted source text.
+- TP-01 — Architecture: Evidence found
+  - Reference: Annex XII §1(f), Form, Model properties
+  - Evidence sufficient: Architecture type is documented for the target model. A family description covering several architectures is partial without a mapping.
+  - Summary: The architecture is documented as a causal language model.
+  - Quote: Type: Causal Language Models
+  - Source: Jina Reader
+  - Source URL: https://huggingface.co/Qwen/Qwen3-8B
+  - Source section: Model overview
+  - Model applicability: Directly about Qwen/Qwen3-8B.
+  - Link check: https://huggingface.co/Qwen/Qwen3-8B -> HTTP 200 (ok)
+  - Regulatory reference: Annex XII §1(f), Form, Model properties
+  - Searched sources:
+    - https://huggingface.co/Qwen/Qwen3-8B
+- TP-02 — Parameter size: Evidence found
+  - Reference: Annex XII §1(f), Form, Model properties
+  - Evidence sufficient: Total parameter count or a clearly documented size range for the target model. Active parameter count alone is partial.
+  - Summary: The model size is given as 8.2B parameters.
+  - Quote: Number of Parameters: 8.2B
+  - Source: Jina Reader
+  - Source URL: https://huggingface.co/Qwen/Qwen3-8B
+  - Source section: Model overview
+  - Model applicability: Directly about the target model.
+  - Link check: https://huggingface.co/Qwen/Qwen3-8B -> HTTP 200 (ok)
+  - Regulatory reference: Annex XII §1(f), Form, Model properties
+  - Searched sources:
+    - https://huggingface.co/Qwen/Qwen3-8B
+- TP-03 — Input and output modalities: Evidence found
+  - Reference: Annex XII §1(g), Form, Model properties
+  - Evidence sufficient: Provider states supported input and output types for the target model.
+  - Summary: The model supports text input and text output, with chat completion examples.
+  - Quote: generate content based on given inputs
+  - Source: Jina Reader
+  - Source URL: https://huggingface.co/Qwen/Qwen3-8B
+  - Source section: Quickstart
+  - Model applicability: Directly about the target model repository.
+  - Link check: https://huggingface.co/Qwen/Qwen3-8B -> HTTP 200 (ok)
+  - Regulatory reference: Annex XII §1(g), Form, Model properties
+  - Searched sources:
+    - https://huggingface.co/Qwen/Qwen3-8B
+- TP-04 — Input and output limits: Partial
+  - Reference: Annex XII §2(b), Form, Model properties
+  - Evidence sufficient: Official documentation gives relevant limits and their units. A single shared context limit is partial if the output limit is unspecified.
+  - Summary: The page gives a native context length and an extended limit with units.
+  - Source: Jina Reader
+  - Source URL: https://huggingface.co/Qwen/Qwen3-8B
+  - Source section: Model overview
+  - Link check: https://huggingface.co/Qwen/Qwen3-8B -> HTTP 200 (ok)
+  - Regulatory reference: Annex XII §2(b), Form, Model properties
+  - Searched sources:
+    - https://huggingface.co/Qwen/Qwen3-8B
+  - Failure reason: Quoted text was not supported by the extracted source text.
+- US-01 — Intended tasks and uses: Evidence found
+  - Reference: Annex XII §1(a), Form, Intended uses
+  - Evidence sufficient: Provider describes representative uses or gives integration examples explicitly associated with the target model.
+  - Summary: The repository gives representative use examples for text generation and deployment.
+  - Quote: Quickstart
+  - Source: Jina Reader
+  - Source URL: https://huggingface.co/Qwen/Qwen3-8B
+  - Source section: Quickstart / deployment
+  - Model applicability: Directly about the target model.
+  - Link check: https://huggingface.co/Qwen/Qwen3-8B -> HTTP 200 (ok)
+  - Regulatory reference: Annex XII §1(a), Form, Intended uses
+  - Searched sources:
+    - https://huggingface.co/Qwen/Qwen3-8B
+    - https://api.tavily.com/search
+- US-02 — Restrictions on use: Not found
+  - Reference: Annex XII §1(b), Form, Intended uses
+  - Evidence sufficient: Applicable restrictions or acceptable-use terms are linked and their relationship to this model or service is documented.
+  - Summary: No applicable use restrictions or acceptable-use terms are linked for the target model in the provided evidence.
+  - Model applicability: Target model only.
+  - Link check: https://huggingface.co/Qwen/Qwen3-8B -> HTTP 200 (ok)
+  - Regulatory reference: Annex XII §1(b), Form, Intended uses
+  - Searched sources:
+    - https://huggingface.co/Qwen/Qwen3-8B
+    - https://huggingface.co/api/models/Qwen/Qwen3-8B
+  - Failure reason: The available metadata only shows the license and quickstart; it does not document restrictions tied to this model or service channel.
+- US-03 — Integration instructions: Evidence found
+  - Reference: Annex XII §2(a)
+  - Evidence sufficient: Official instructions identify a usable API call or local setup and its relevant prerequisites.
+  - Summary: The page provides usable local setup and inference instructions, including code and CLI examples.
+  - Quote: from transformers import AutoModelForCausalLM, AutoTokenizer
+  - Source: Jina Reader
+  - Source URL: https://huggingface.co/Qwen/Qwen3-8B
+  - Source section: Quickstart / deployment
+  - Model applicability: Directly about the target model.
+  - Link check: https://huggingface.co/Qwen/Qwen3-8B -> HTTP 200 (ok)
+  - Regulatory reference: Annex XII §2(a)
+  - Searched sources:
+    - https://huggingface.co/Qwen/Qwen3-8B
+- DT-01 — Training data types and provenance: Not found
+  - Reference: Annex XII §2(c), Form, Data
+  - Evidence sufficient: Provider identifies the data types and source categories for the model or a family explicitly documented as sharing them.
+  - Summary: No source identifies training data types or provenance for Qwen/Qwen3-8B.
+  - Model applicability: Target model only.
+  - Link check: https://huggingface.co/Qwen/Qwen3-8B -> HTTP 200 (ok)
+  - Regulatory reference: Annex XII §2(c), Form, Data
+  - Searched sources:
+    - https://huggingface.co/Qwen/Qwen3-8B
+    - https://qwenlm.github.io/blog/qwen3/
+  - Failure reason: The provided evidence focuses on model overview, usage, and benchmarks rather than data sources or provenance.
+- DT-02 — Training data curation: Not found
+  - Reference: Annex XII §2(c), Form, Data
+  - Evidence sufficient: Model-specific documentation explains selection, filtering or other relevant curation methods. Family-level evidence without explicit applicability is partial.
+  - Summary: No model-specific documentation explains data selection, filtering, or other curation methods for Qwen/Qwen3-8B.
+  - Model applicability: Target model only.
+  - Link check: https://huggingface.co/Qwen/Qwen3-8B -> HTTP 200 (ok)
+  - Regulatory reference: Annex XII §2(c), Form, Data
+  - Searched sources:
+    - https://huggingface.co/Qwen/Qwen3-8B
+    - https://qwenlm.github.io/blog/qwen3/
+  - Failure reason: The provided materials do not describe curation steps for the exact target model.
+- DT-03 — Public training-content summary: Not found
+  - Reference: Article 53(1)(d), separate AI Office template
+  - Evidence sufficient: A provider-published public summary explicitly covers the target model. A technical report may support other data checks and should be distinguished from a published summary.
+  - Summary: No provider-published public training-content summary for the target model is present in the provided evidence.
+  - Model applicability: Target model only.
+  - Link check: https://huggingface.co/Qwen/Qwen3-8B -> HTTP 200 (ok)
+  - Regulatory reference: Article 53(1)(d), separate AI Office template
+  - Searched sources:
+    - https://huggingface.co/Qwen/Qwen3-8B
+    - https://qwenlm.github.io/blog/qwen3/
+  - Failure reason: The available sources are a repository page and technical-style material, not a dedicated public training-content summary for Qwen/Qwen3-8B.
+- CT-01 — Training duration — Context: Not found
+  - Reference: Annex XI §1(2)(d), Form, Computational resources
+  - Evidence sufficient: Provider gives a duration or documented duration range and identifies the training phase covered.
+  - Summary: No training duration for Qwen/Qwen3-8B is provided in the evidence.
+  - Model applicability: Target model only.
+  - Link check: https://huggingface.co/Qwen/Qwen3-8B -> HTTP 200 (ok)
+  - Regulatory reference: Annex XI §1(2)(d), Form, Computational resources
+  - Searched sources:
+    - https://huggingface.co/Qwen/Qwen3-8B
+    - https://qwenlm.github.io/blog/qwen3/
+  - Failure reason: No duration or training-phase time range is stated for the target model.
+- CT-02 — Training compute — Context: Not found
+  - Reference: Annex XI §1(2)(d), Form, Computational resources
+  - Evidence sufficient: Provider gives a model-specific compute amount or range with units and phase. Hardware type alone is partial.
+  - Summary: No model-specific training compute amount or range is given for Qwen/Qwen3-8B.
+  - Model applicability: Target model only.
+  - Link check: https://huggingface.co/Qwen/Qwen3-8B -> HTTP 200 (ok)
+  - Regulatory reference: Annex XI §1(2)(d), Form, Computational resources
+  - Searched sources:
+    - https://huggingface.co/Qwen/Qwen3-8B
+    - https://qwenlm.github.io/blog/qwen3/
+  - Failure reason: The evidence includes parameter counts and usage settings, but not training compute with units and phase for this model.
+- CT-03 — Training energy — Context: Not found
+  - Reference: Annex XI §1(2)(e), Form, Energy consumption
+  - Evidence sufficient: Provider gives a model-specific energy amount with units and scope. A documented reason why it cannot estimate energy is recorded separately as partial evidence.
+  - Summary: No model-specific training energy amount or estimate for Qwen/Qwen3-8B is provided.
+  - Model applicability: Target model only.
+  - Link check: https://huggingface.co/Qwen/Qwen3-8B -> HTTP 200 (ok)
+  - Regulatory reference: Annex XI §1(2)(e), Form, Energy consumption
+  - Searched sources:
+    - https://huggingface.co/Qwen/Qwen3-8B
+    - https://qwenlm.github.io/blog/qwen3/
+  - Failure reason: The provided evidence does not include energy consumption with units or a model-specific estimate for the target model.
+
+### Prioritised provider questions
+- 1. Can you confirm the original public release date for Qwen/Qwen3-8B? [ID-02]
+- 2. What is the exact upstream base model or checkpoint for Qwen/Qwen3-8B, or is it not a fine-tune? [ID-03]
+- 3. Are there any model-specific use restrictions or acceptable-use terms for Qwen/Qwen3-8B? [US-02]
+- 4. What data types and source categories were used to train Qwen/Qwen3-8B? [DT-01]
+- 5. How was the training data for Qwen/Qwen3-8B selected or filtered? [DT-02]
+- 6. Do you have a public training-content summary specifically for Qwen/Qwen3-8B? [DT-03]
+- 7. What was the training duration for Qwen/Qwen3-8B, and which training phase does it cover? [CT-01]
+- 8. What was the training compute for Qwen/Qwen3-8B, and for which phase? [CT-02]
+- 9. What was the training energy consumption for Qwen/Qwen3-8B, or why can’t it be estimated? [CT-03]
+
+### Methods and limitations
+- Assessment used only the provided provider evidence and did not infer missing facts from outside knowledge.
+- Hugging Face repository metadata, Jina Reader page text, and Tavily search snippets were treated as the only evidence sources.
+- Some fields are partial or not found because the evidence covers usage and model overview more than provenance, training data, or training resources.
+- A quote was only retained when it clearly matched the exact target model or repository and supported the checklist item.
+
+### Regulatory context
+- Checklist item: ID-01
+  - Retrieval query: official provider and exact model identity
+  - Retrieved references:
+    - Annex XII, point 1(h) (ai-act-annex-xii-1h)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.454572052
+      - Excerpt: The downstream-provider documentation must state the licence for the model.
+    - Annex XI, Section 1, point 1(c) (ai-act-annex-xi-1c)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.413899362
+      - Excerpt: The general description must identify the model's date of release and methods of distribution.
+    - Article 53(1)(b) (ai-act-art53-1b)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.383297056
+      - Excerpt: Providers must also prepare and keep up to date information and documentation for AI system providers who integrate the model, so they can understand capabilities and limitations and meet their own obligations; the documentation must contain at least the elements in Annex XII.
+- Checklist item: ID-02
+  - Retrieval query: release date for the exact model
+  - Retrieved references:
+    - Annex XI, Section 1, point 1(c) (ai-act-annex-xi-1c)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.511461377
+      - Excerpt: The general description must identify the model's date of release and methods of distribution.
+    - Annex XII, point 1(h) (ai-act-annex-xii-1h)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.347068518
+      - Excerpt: The downstream-provider documentation must state the licence for the model.
+    - Transparency chapter, Measure 1.1 (cop-transparency-m1-1)
+      - Official URL: https://digital-strategy.ec.europa.eu/en/policies/contents-code-gpai
+      - Document version: GPAI Code of Practice Transparency chapter, published 2025-07-10
+      - Match score: 0.294493109
+      - Excerpt: Signatories must draw up and keep up to date model documentation when they place a general-purpose AI model on the market, documenting at least the information in the Model Documentation Form and retaining earlier versions for ten years.
+- Checklist item: ID-03
+  - Retrieval query: base model or upstream checkpoint
+  - Retrieved references:
+    - Annex XII, point 1(h) (ai-act-annex-xii-1h)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.370221972
+      - Excerpt: The downstream-provider documentation must state the licence for the model.
+    - Annex XII, point 1(a) (ai-act-annex-xii-1a)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.360052288
+      - Excerpt: The downstream-provider documentation must include the tasks the model is intended to perform and the type and nature of AI systems into which it can be integrated.
+    - Transparency chapter, Measure 1.1 (cop-transparency-m1-1)
+      - Official URL: https://digital-strategy.ec.europa.eu/en/policies/contents-code-gpai
+      - Document version: GPAI Code of Practice Transparency chapter, published 2025-07-10
+      - Match score: 0.275120318
+      - Excerpt: Signatories must draw up and keep up to date model documentation when they place a general-purpose AI model on the market, documenting at least the information in the Model Documentation Form and retaining earlier versions for ten years.
+- Checklist item: DS-01
+  - Retrieval query: distribution and access for the exact model
+  - Retrieved references:
+    - Annex XI, Section 1, point 1(c) (ai-act-annex-xi-1c)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.51229912
+      - Excerpt: The general description must identify the model's date of release and methods of distribution.
+    - Annex XII, point 1(h) (ai-act-annex-xii-1h)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.437123239
+      - Excerpt: The downstream-provider documentation must state the licence for the model.
+    - Annex XI, Section 1, point 2(e) (ai-act-annex-xi-2e)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.330021322
+      - Excerpt: Providers must document the known or estimated energy consumption of the model; if it is unknown, the estimate may rely on the computational resources used.
+- Checklist item: DS-02
+  - Retrieval query: licence or access terms
+  - Retrieved references:
+    - Annex XII, point 1(h) (ai-act-annex-xii-1h)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.443694979
+      - Excerpt: The downstream-provider documentation must state the licence for the model.
+    - Annex XI, Section 1, point 1(c) (ai-act-annex-xi-1c)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.323202163
+      - Excerpt: The general description must identify the model's date of release and methods of distribution.
+    - Transparency chapter, Measure 1.2 (cop-transparency-m1-2)
+      - Official URL: https://digital-strategy.ec.europa.eu/en/policies/contents-code-gpai
+      - Document version: GPAI Code of Practice Transparency chapter, published 2025-07-10
+      - Match score: 0.3197245
+      - Excerpt: Signatories must publicly disclose contact information for the AI Office and downstream providers to request access to relevant information, provide up-to-date information on request from the AI Office, and give downstream providers the documentation they need to understand capabilities, limitations, and integration.
+- Checklist item: TP-01
+  - Retrieval query: architecture type
+  - Retrieved references:
+    - Transparency chapter, Measure 1.1 (cop-transparency-m1-1)
+      - Official URL: https://digital-strategy.ec.europa.eu/en/policies/contents-code-gpai
+      - Document version: GPAI Code of Practice Transparency chapter, published 2025-07-10
+      - Match score: 0.247914881
+      - Excerpt: Signatories must draw up and keep up to date model documentation when they place a general-purpose AI model on the market, documenting at least the information in the Model Documentation Form and retaining earlier versions for ten years.
+    - Annex XII, point 2(a) (ai-act-annex-xii-2a)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.239430338
+      - Excerpt: The documentation must describe the technical means required for the model to be integrated into AI systems.
+    - Article 53(1)(a) (ai-act-art53-1a)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.209401935
+      - Excerpt: Providers of general-purpose AI models must draw up and keep up to date technical documentation for the model, including its training and testing process and evaluation results, with the minimum information set out in Annex XI for the AI Office and national competent authorities.
+- Checklist item: TP-02
+  - Retrieval query: parameter count
+  - Retrieved references:
+    - Annex XII, point 2(b) (ai-act-annex-xii-2b)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.274666965
+      - Excerpt: The documentation must include the modality and format of inputs and outputs and their maximum size, such as context window length.
+    - Annex XI, Section 1, point 2(e) (ai-act-annex-xi-2e)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.234908402
+      - Excerpt: Providers must document the known or estimated energy consumption of the model; if it is unknown, the estimate may rely on the computational resources used.
+    - Article 53(1)(b) (ai-act-art53-1b)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.17974329
+      - Excerpt: Providers must also prepare and keep up to date information and documentation for AI system providers who integrate the model, so they can understand capabilities and limitations and meet their own obligations; the documentation must contain at least the elements in Annex XII.
+- Checklist item: TP-03
+  - Retrieval query: input and output modalities
+  - Retrieved references:
+    - Annex XII, point 2(b) (ai-act-annex-xii-2b)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.524266362
+      - Excerpt: The documentation must include the modality and format of inputs and outputs and their maximum size, such as context window length.
+    - Annex XII, point 2(a) (ai-act-annex-xii-2a)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.251989394
+      - Excerpt: The documentation must describe the technical means required for the model to be integrated into AI systems.
+    - Annex XII, point 1(a) (ai-act-annex-xii-1a)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.234923229
+      - Excerpt: The downstream-provider documentation must include the tasks the model is intended to perform and the type and nature of AI systems into which it can be integrated.
+- Checklist item: TP-04
+  - Retrieval query: input and output limits
+  - Retrieved references:
+    - Annex XII, point 2(b) (ai-act-annex-xii-2b)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.470683
+      - Excerpt: The documentation must include the modality and format of inputs and outputs and their maximum size, such as context window length.
+    - Annex XI, Section 1, point 2(e) (ai-act-annex-xi-2e)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.284010649
+      - Excerpt: Providers must document the known or estimated energy consumption of the model; if it is unknown, the estimate may rely on the computational resources used.
+    - Article 53(1)(b) (ai-act-art53-1b)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.224147514
+      - Excerpt: Providers must also prepare and keep up to date information and documentation for AI system providers who integrate the model, so they can understand capabilities and limitations and meet their own obligations; the documentation must contain at least the elements in Annex XII.
+- Checklist item: US-01
+  - Retrieval query: intended uses and representative tasks
+  - Retrieved references:
+    - Annex XII, point 1(a) (ai-act-annex-xii-1a)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.393914938
+      - Excerpt: The downstream-provider documentation must include the tasks the model is intended to perform and the type and nature of AI systems into which it can be integrated.
+    - Article 53(1)(d) (ai-act-art53-1d)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.345913082
+      - Excerpt: Providers must draw up and publicly make available a sufficiently detailed summary of the content used for training the general-purpose AI model using the AI Office template.
+    - Article 53(1)(b) (ai-act-art53-1b)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.284999311
+      - Excerpt: Providers must also prepare and keep up to date information and documentation for AI system providers who integrate the model, so they can understand capabilities and limitations and meet their own obligations; the documentation must contain at least the elements in Annex XII.
+- Checklist item: US-02
+  - Retrieval query: restrictions on use
+  - Retrieved references:
+    - Annex XII, point 1(h) (ai-act-annex-xii-1h)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.302572
+      - Excerpt: The downstream-provider documentation must state the licence for the model.
+    - Annex XI, Section 1, point 1(c) (ai-act-annex-xi-1c)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.301776946
+      - Excerpt: The general description must identify the model's date of release and methods of distribution.
+    - Transparency chapter, Measure 1.2 (cop-transparency-m1-2)
+      - Official URL: https://digital-strategy.ec.europa.eu/en/policies/contents-code-gpai
+      - Document version: GPAI Code of Practice Transparency chapter, published 2025-07-10
+      - Match score: 0.257617235
+      - Excerpt: Signatories must publicly disclose contact information for the AI Office and downstream providers to request access to relevant information, provide up-to-date information on request from the AI Office, and give downstream providers the documentation they need to understand capabilities, limitations, and integration.
+- Checklist item: US-03
+  - Retrieval query: official integration instructions and API call
+  - Retrieved references:
+    - Transparency chapter, Measure 1.2 (cop-transparency-m1-2)
+      - Official URL: https://digital-strategy.ec.europa.eu/en/policies/contents-code-gpai
+      - Document version: GPAI Code of Practice Transparency chapter, published 2025-07-10
+      - Match score: 0.384587944
+      - Excerpt: Signatories must publicly disclose contact information for the AI Office and downstream providers to request access to relevant information, provide up-to-date information on request from the AI Office, and give downstream providers the documentation they need to understand capabilities, limitations, and integration.
+    - Annex XII, point 2(a) (ai-act-annex-xii-2a)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.350031376
+      - Excerpt: The documentation must describe the technical means required for the model to be integrated into AI systems.
+    - Annex XII, point 1(a) (ai-act-annex-xii-1a)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.318665326
+      - Excerpt: The downstream-provider documentation must include the tasks the model is intended to perform and the type and nature of AI systems into which it can be integrated.
+- Checklist item: DT-01
+  - Retrieval query: training data types and provenance
+  - Retrieved references:
+    - Annex XII, point 2(c) (ai-act-annex-xii-2c)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.618482351
+      - Excerpt: The documentation must cover the data used for training, testing and validation, including type, provenance and curation methodology.
+    - Article 53(1)(a) (ai-act-art53-1a)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.354913831
+      - Excerpt: Providers of general-purpose AI models must draw up and keep up to date technical documentation for the model, including its training and testing process and evaluation results, with the minimum information set out in Annex XI for the AI Office and national competent authorities.
+    - Article 53(1)(d) (ai-act-art53-1d)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.33577013
+      - Excerpt: Providers must draw up and publicly make available a sufficiently detailed summary of the content used for training the general-purpose AI model using the AI Office template.
+- Checklist item: DT-02
+  - Retrieval query: training data curation
+  - Retrieved references:
+    - Annex XII, point 2(c) (ai-act-annex-xii-2c)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.564929366
+      - Excerpt: The documentation must cover the data used for training, testing and validation, including type, provenance and curation methodology.
+    - Article 53(1)(d) (ai-act-art53-1d)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.378910601
+      - Excerpt: Providers must draw up and publicly make available a sufficiently detailed summary of the content used for training the general-purpose AI model using the AI Office template.
+    - Article 53(1)(a) (ai-act-art53-1a)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.343512
+      - Excerpt: Providers of general-purpose AI models must draw up and keep up to date technical documentation for the model, including its training and testing process and evaluation results, with the minimum information set out in Annex XI for the AI Office and national competent authorities.
+- Checklist item: DT-03
+  - Retrieval query: public summary of training content
+  - Retrieved references:
+    - Article 53(1)(d) support (ai-act-training-summary-template)
+      - Official URL: https://digital-strategy.ec.europa.eu/en/faqs/template-general-purpose-ai-model-providers-summarise-their-training-content
+      - Document version: Commission template page, last update 2026-11-10
+      - Match score: 0.557662964
+      - Excerpt: The Commission template and explanatory notice facilitate compliance with the public summary of training content requirement under Article 53(1)(d).
+    - Article 53(1)(d) (ai-act-art53-1d)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.518379331
+      - Excerpt: Providers must draw up and publicly make available a sufficiently detailed summary of the content used for training the general-purpose AI model using the AI Office template.
+    - Annex XII, point 2(c) (ai-act-annex-xii-2c)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.462982029
+      - Excerpt: The documentation must cover the data used for training, testing and validation, including type, provenance and curation methodology.
+- Checklist item: CT-01
+  - Retrieval query: training duration
+  - Retrieved references:
+    - Article 53(1)(d) support (ai-act-training-summary-template)
+      - Official URL: https://digital-strategy.ec.europa.eu/en/faqs/template-general-purpose-ai-model-providers-summarise-their-training-content
+      - Document version: Commission template page, last update 2026-11-10
+      - Match score: 0.32523492
+      - Excerpt: The Commission template and explanatory notice facilitate compliance with the public summary of training content requirement under Article 53(1)(d).
+    - Article 53(1)(d) (ai-act-art53-1d)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.264995784
+      - Excerpt: Providers must draw up and publicly make available a sufficiently detailed summary of the content used for training the general-purpose AI model using the AI Office template.
+    - Annex XII, point 2(b) (ai-act-annex-xii-2b)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.241084188
+      - Excerpt: The documentation must include the modality and format of inputs and outputs and their maximum size, such as context window length.
+- Checklist item: CT-02
+  - Retrieval query: training compute
+  - Retrieved references:
+    - Article 53(1)(d) (ai-act-art53-1d)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.316381156
+      - Excerpt: Providers must draw up and publicly make available a sufficiently detailed summary of the content used for training the general-purpose AI model using the AI Office template.
+    - Article 53(1)(d) support (ai-act-training-summary-template)
+      - Official URL: https://digital-strategy.ec.europa.eu/en/faqs/template-general-purpose-ai-model-providers-summarise-their-training-content
+      - Document version: Commission template page, last update 2026-11-10
+      - Match score: 0.293077767
+      - Excerpt: The Commission template and explanatory notice facilitate compliance with the public summary of training content requirement under Article 53(1)(d).
+    - Article 53(1)(a) (ai-act-art53-1a)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.288605213
+      - Excerpt: Providers of general-purpose AI models must draw up and keep up to date technical documentation for the model, including its training and testing process and evaluation results, with the minimum information set out in Annex XI for the AI Office and national competent authorities.
+- Checklist item: CT-03
+  - Retrieval query: training energy
+  - Retrieved references:
+    - Annex XI, Section 1, point 2(e) (ai-act-annex-xi-2e)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.369112074
+      - Excerpt: Providers must document the known or estimated energy consumption of the model; if it is unknown, the estimate may rely on the computational resources used.
+    - Article 53(1)(d) support (ai-act-training-summary-template)
+      - Official URL: https://digital-strategy.ec.europa.eu/en/faqs/template-general-purpose-ai-model-providers-summarise-their-training-content
+      - Document version: Commission template page, last update 2026-11-10
+      - Match score: 0.285235226
+      - Excerpt: The Commission template and explanatory notice facilitate compliance with the public summary of training content requirement under Article 53(1)(d).
+    - Article 53(1)(d) (ai-act-art53-1d)
+      - Official URL: https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=OJ%3AL_202401689
+      - Document version: Regulation (EU) 2024/1689, OJ L, 12.7.2024
+      - Match score: 0.250409096
+      - Excerpt: Providers must draw up and publicly make available a sufficiently detailed summary of the content used for training the general-purpose AI model using the AI Office template.

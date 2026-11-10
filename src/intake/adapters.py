@@ -15,6 +15,7 @@ class ToolOutcome:
     usable: bool
     urls: list[str] = field(default_factory=list)
     snippet: str | None = None
+    full_text: str | None = None
     error: str | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
 
@@ -216,6 +217,7 @@ def jina_reader_extract(url: str, timeout_seconds: float, allowed_domains: list[
         http_status=http_status,
         usable=True,
         snippet=_truncate(text),
+        full_text=text,
     )
 
 
@@ -263,10 +265,33 @@ def hugging_face_model_metadata(model_id: str, timeout_seconds: float) -> ToolOu
             error='Hugging Face Hub response did not include a model identifier.',
         )
 
+    card_data = payload.get('cardData') if isinstance(payload.get('cardData'), dict) else {}
+    license_value = payload.get('license')
+    if not isinstance(license_value, str) or not license_value:
+        card_license = card_data.get('license') if isinstance(card_data, dict) else None
+        license_value = card_license if isinstance(card_license, str) else None
+    license_url = payload.get('license_url') or payload.get('licenseUrl')
+    if not isinstance(license_url, str) or not license_url:
+        for candidate in (
+            card_data.get('license_url') if isinstance(card_data, dict) else None,
+            card_data.get('licenseUrl') if isinstance(card_data, dict) else None,
+            card_data.get('license_link') if isinstance(card_data, dict) else None,
+            card_data.get('licenseLink') if isinstance(card_data, dict) else None,
+        ):
+            if isinstance(candidate, str) and candidate:
+                license_url = candidate
+                break
+    author = payload.get('author')
+    if not isinstance(author, str) or not author:
+        card_author = card_data.get('author') if isinstance(card_data, dict) else None
+        author = card_author if isinstance(card_author, str) else None
+
     metadata = {
         'modelId': model_name,
         'pipeline_tag': payload.get('pipeline_tag'),
-        'license': payload.get('license'),
+        'license': license_value,
+        'license_url': license_url,
+        'author': author,
         'downloads': payload.get('downloads'),
         'likes': payload.get('likes'),
         'private': payload.get('private'),

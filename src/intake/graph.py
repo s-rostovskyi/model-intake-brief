@@ -5,12 +5,23 @@ from typing import Any, TypedDict
 from langgraph.graph import END, START, StateGraph
 
 from .adapters import hugging_face_model_metadata, jina_reader_extract, tavily_search_urls
+from .assessment import (
+    AssessmentFailure,
+    build_offline_assessment,
+    build_partial_assessment,
+    call_openai_assessment,
+    check_public_urls,
+    normalize_assessment_output,
+    render_markdown as render_assessment_markdown,
+)
+from .checklist import ChecklistItem, load_checklist
 from .fixtures import FIXTURE_RECORD
-from .regulatory import default_query_for_item, load_rag_config_from_env, retrieve_regulatory_context
+from .regulatory import default_query_for_item, load_rag_config_from_env, retrieve_regulatory_context_batch
 from .settings import load_live_settings
 
 
 CHECKLIST_ITEM_BY_TARGET_KIND = {'hugging_face': 'DT-03', 'hosted': 'US-03'}
+HF_MODEL_CARD_URL = 'https://huggingface.co/Qwen/Qwen3-8B'
 
 
 class IntakeState(TypedDict, total=False):
@@ -21,10 +32,14 @@ class IntakeState(TypedDict, total=False):
     exact_model_id: str | None
     target_kind: str | None
     checklist_item_id: str | None
+    checklist: list[ChecklistItem]
     provider_domains: list[str]
+    model_provider: str | None
+    hosting_platform: str | None
     draft_label: str | None
-    tool_outcomes: list[dict[str, Any]]
-    regulatory_context: dict[str, Any]
+    tool_outcomes: list[Any]
+    regulatory_contexts: dict[str, Any]
+    assessment: dict[str, Any]
     report_markdown: str | None
     error: str | None
 
@@ -58,42 +73,102 @@ def validate_and_normalize_target(state: IntakeState) -> IntakeState:
     }
 
 
-def _offline_fixture_outcome(model_id: str, provider: str | None, target_kind: str | None) -> dict[str, Any]:
-    return {
-        'name': 'Offline fixture',
-        'requested_url': None,
-        'http_status': None,
-        'usable': True,
-        'urls': [],
-        'snippet': f'Deterministic fixture for {model_id}.',
-        'error': None,
-        'metadata': {
+def load_checklist_node(state: IntakeState) -> IntakeState:
+    if state.get('error') and not state.get('assessment'):
+        return {}
+    return {'checklist': load_checklist()}
+
+
+def _offline_fixture_outcome(model_id: str, provider: str | None, target_kind: str | None):
+    from .adapters import ToolOutcome
+
+    return ToolOutcome(
+        name='Offline fixture',
+        requested_url=None,
+        http_status=None,
+        usable=True,
+        urls=[],
+        snippet=f'Deterministic fixture for {model_id}.',
+        metadata={
             'id': FIXTURE_RECORD['id'],
             'label': FIXTURE_RECORD['label'],
             'status': FIXTURE_RECORD['status'],
             'provider': provider,
             'target_kind': target_kind,
         },
-    }
+    )
 
 
-def _build_regulatory_context(checklist_item_id: str | None, regulatory_result) -> dict[str, Any]:
-    return {
-        'checklist_item_id': checklist_item_id,
-        'query': regulatory_result.query,
-        'hits': [
-            {
-                'chunk_id': hit.chunk_id,
-                'provision': hit.provision,
-                'official_url': hit.official_url,
-                'score': hit.score,
-                'document_version': hit.document_version,
-                'excerpt': hit.excerpt,
-            }
-            for hit in regulatory_result.hits
-        ],
-        'blockers': list(regulatory_result.blockers),
-    }
+def _model_provider_from_hf_metadata(tool_outcomes: list[Any]) -> str | None:
+    for outcome in tool_outcomes:
+        if getattr(outcome, 'name', None) == 'Hugging Face Hub':
+            metadata = getattr(outcome, 'metadata', {}) or {}
+            author = metadata.get('author')
+            if isinstance(author, str) and author.strip():
+                return author.strip()
+    return None
+
+
+def _collect_hf_sources(exact_model_id: str, live_settings) -> list[Any]:
+    outcomes = []
+    primary_search = tavily_search_urls(
+        query=f'{exact_model_id} official documentation',
+        api_key=live_settings.tavily_api_key,
+        timeout_seconds=live_settings.tavily_timeout_seconds,
+        include_domains=['huggingface.co'],
+    )
+    outcomes.append(primary_search)
+    follow_up_search = tavily_search_urls(
+        query=f'{exact_model_id} architecture parameter size training data licence',
+        api_key=live_settings.tavily_api_key,
+        timeout_seconds=live_settings.tavily_timeout_seconds,
+        include_domains=['huggingface.co'],
+    )
+    outcomes.append(follow_up_search)
+    outcomes.append(hugging_face_model_metadata(exact_model_id, timeout_seconds=live_settings.hf_timeout_seconds))
+
+    candidate_urls: list[str] = [HF_MODEL_CARD_URL]
+    for outcome in (primary_search, follow_up_search):
+        for url in outcome.urls:
+            if url not in candidate_urls:
+                candidate_urls.append(url)
+
+    for url in candidate_urls[:3]:
+        reader_outcome = jina_reader_extract(url, timeout_seconds=live_settings.jina_timeout_seconds)
+        outcomes.append(reader_outcome)
+    return outcomes
+
+
+def _collect_hosted_sources(provider: str | None, exact_model_id: str, live_settings) -> list[Any]:
+    outcomes = []
+    primary_search = tavily_search_urls(
+        query=f'{provider} {exact_model_id} official documentation',
+        api_key=live_settings.tavily_api_key,
+        timeout_seconds=live_settings.tavily_timeout_seconds,
+        include_domains=live_settings.provider_domains,
+    )
+    outcomes.append(primary_search)
+    follow_up_search = tavily_search_urls(
+        query=f'{provider} {exact_model_id} model documentation API limits access terms',
+        api_key=live_settings.tavily_api_key,
+        timeout_seconds=live_settings.tavily_timeout_seconds,
+        include_domains=live_settings.provider_domains,
+    )
+    outcomes.append(follow_up_search)
+
+    candidate_urls: list[str] = []
+    for outcome in (primary_search, follow_up_search):
+        for url in outcome.urls:
+            if url not in candidate_urls:
+                candidate_urls.append(url)
+    for url in candidate_urls[:3]:
+        reader_outcome = jina_reader_extract(
+            url,
+            timeout_seconds=live_settings.jina_timeout_seconds,
+            allowed_domains=live_settings.provider_domains,
+        )
+        outcomes.append(reader_outcome)
+    return outcomes
 
 
 def collect_sources(state: IntakeState) -> IntakeState:
@@ -102,144 +177,201 @@ def collect_sources(state: IntakeState) -> IntakeState:
     exact_model_id = state['exact_model_id']
     provider = state.get('provider')
     target_kind = state.get('target_kind')
-    checklist_item_id = state.get('checklist_item_id')
     if not state.get('live_mode'):
         return {
-            'draft_label': 'Offline demo ? fixture data',
+            'draft_label': 'Offline demo — fixture data',
+            'model_provider': 'unknown',
+            'hosting_platform': 'offline',
             'tool_outcomes': [_offline_fixture_outcome(exact_model_id, provider, target_kind)],
         }
     try:
         live_settings = load_live_settings()
     except ValueError as exc:
         return {'error': str(exc)}
-    tool_outcomes: list[dict[str, Any]] = []
-    provider_domains: list[str] = []
+
     if target_kind == 'hugging_face':
-        search_outcome = tavily_search_urls(query=f'{exact_model_id} official documentation', api_key=live_settings.tavily_api_key, timeout_seconds=live_settings.tavily_timeout_seconds)
-        tool_outcomes.append(search_outcome.as_dict())
-        if search_outcome.usable and search_outcome.urls:
-            reader_outcome = jina_reader_extract(search_outcome.urls[0], timeout_seconds=live_settings.jina_timeout_seconds)
-            tool_outcomes.append(reader_outcome.as_dict())
-        tool_outcomes.append(hugging_face_model_metadata(exact_model_id, timeout_seconds=live_settings.hf_timeout_seconds).as_dict())
-        provider_domains = live_settings.provider_domains
+        tool_outcomes = _collect_hf_sources(exact_model_id, live_settings)
+        provider_domains = live_settings.provider_domains or ['huggingface.co']
+        model_provider = _model_provider_from_hf_metadata(tool_outcomes) or 'unknown'
+        hosting_platform = 'Hugging Face'
     else:
         if not live_settings.provider_domains:
             return {'error': 'Missing INTAKE_PROVIDER_DOMAINS for live hosted mode.'}
-        search_outcome = tavily_search_urls(query=f'{provider} {exact_model_id} official documentation', api_key=live_settings.tavily_api_key, timeout_seconds=live_settings.tavily_timeout_seconds, include_domains=live_settings.provider_domains)
-        tool_outcomes.append(search_outcome.as_dict())
-        if search_outcome.usable and search_outcome.urls:
-            reader_outcome = jina_reader_extract(search_outcome.urls[0], timeout_seconds=live_settings.jina_timeout_seconds, allowed_domains=live_settings.provider_domains)
-            tool_outcomes.append(reader_outcome.as_dict())
+        tool_outcomes = _collect_hosted_sources(provider, exact_model_id, live_settings)
         provider_domains = live_settings.provider_domains
-    regulatory_result = retrieve_regulatory_context(default_query_for_item(checklist_item_id), load_rag_config_from_env(), item_id=checklist_item_id, timeout_seconds=live_settings.rag_timeout_seconds)
+        model_provider = provider or 'unknown'
+        hosting_platform = provider or 'unknown'
+
     return {
-        'draft_label': 'Integration draft',
+        'draft_label': 'Full report',
         'provider_domains': provider_domains,
+        'model_provider': model_provider,
+        'hosting_platform': hosting_platform,
         'tool_outcomes': tool_outcomes,
-        'regulatory_context': _build_regulatory_context(checklist_item_id, regulatory_result),
     }
 
 
-def _format_outcome(outcome: dict[str, Any]) -> list[str]:
-    lines = []
-    name = outcome.get('name', 'Tool')
-    http_status = outcome.get('http_status')
-    usable = 'yes' if outcome.get('usable') else 'no'
-    lines.append(f"- {name}: HTTP {http_status if http_status is not None else 'n/a'}; usable data: {usable}")
-    requested_url = outcome.get('requested_url')
-    if requested_url and name != 'Tavily Search':
-        lines.append(f'  - Source URL: {requested_url}')
-    error = outcome.get('error')
-    if error:
-        lines.append(f'  - Error: {error}')
-    urls = outcome.get('urls') or []
-    if urls:
-        lines.append('  - Source URLs:')
-        for url in urls:
-            lines.append(f'    - {url}')
-    snippet = outcome.get('snippet')
-    if snippet:
-        if name == 'Tavily Search':
-            lines.append(f'  - Search snippet (candidate material only): {snippet}')
-        elif name == 'Jina Reader':
-            lines.append(f'  - Extracted text: {snippet}')
-    metadata = outcome.get('metadata') or {}
-    if metadata:
-        visible = {key: value for key, value in metadata.items() if value not in (None, '', [], {})}
-        if visible:
-            lines.append('  - Metadata:')
-            for key, value in visible.items():
-                lines.append(f'    - {key}: {value}')
-    return lines
-
-
-def _format_regulatory_context(context: dict[str, Any]) -> list[str]:
-    lines = [f"- Checklist item: {context.get('checklist_item_id') or 'n/a'}", f"- Retrieval query: {context.get('query') or 'n/a'}"]
-    blockers = context.get('blockers') or []
-    if blockers:
-        lines.append('- Retrieval blockers:')
-        for blocker in blockers:
-            lines.append(f'  - {blocker}')
-    hits = context.get('hits') or []
-    if hits:
-        lines.append('- Retrieved references:')
-        for hit in hits:
-            lines.append(f"  - {hit.get('provision', 'unknown')} ({hit.get('chunk_id', 'unknown')})")
-            lines.append(f"    - Official URL: {hit.get('official_url') or 'n/a'}")
-            lines.append(f"    - Document version: {hit.get('document_version') or 'n/a'}")
-            lines.append(f"    - Match score: {hit.get('score')}")
-            excerpt = hit.get('excerpt')
-            if excerpt:
-                lines.append(f'    - Excerpt: {excerpt}')
-    else:
-        lines.append('- No regulatory references were returned.')
-    return lines
-
-
-def render_markdown(state: IntakeState) -> IntakeState:
+def retrieve_regulatory_contexts(state: IntakeState) -> IntakeState:
     if state.get('error'):
         return {}
-    exact_model_id = state['exact_model_id']
-    provider = state['provider'] or ''
-    target_kind = state['target_kind'] or ''
-    checklist_item_id = state.get('checklist_item_id') or 'n/a'
-    provider_domains = state.get('provider_domains') or []
-    draft_label = state.get('draft_label') or 'Integration draft'
-    tool_outcomes = state.get('tool_outcomes') or []
-    regulatory_context = state.get('regulatory_context')
-    lines = [
-        '# Model Intake Brief',
-        '',
-        f'## {draft_label}',
-        '',
-        f'- Exact model ID: `{exact_model_id}`',
-        f'- Provider: {provider}',
-        '- Notice: Information, not legal advice.',
-        f'- Target kind: {target_kind}',
-        f'- Checklist item: {checklist_item_id}',
-    ]
-    if provider_domains:
-        lines.append(f"- Configured provider domains: {', '.join(provider_domains)}")
-    lines.extend(['', '### Per-tool outcomes'])
+    if not state.get('live_mode'):
+        return {'regulatory_contexts': {}}
+    checklist = state.get('checklist') or []
+    config = load_rag_config_from_env()
+    item_ids = [item.item_id for item in checklist]
+    retrievals = retrieve_regulatory_context_batch(item_ids, config, timeout_seconds=15.0, top_k=3)
+    contexts: dict[str, Any] = {}
+    for item_id, result in retrievals.items():
+        contexts[str(item_id)] = {
+            'checklist_item_id': result.item_id,
+            'query': result.query,
+            'hits': [
+                {
+                    'chunk_id': hit.chunk_id,
+                    'provision': hit.provision,
+                    'official_url': hit.official_url,
+                    'score': hit.score,
+                    'document_version': hit.document_version,
+                    'excerpt': hit.excerpt,
+                }
+                for hit in result.hits
+            ],
+            'blockers': list(result.blockers),
+        }
+    return {'regulatory_contexts': contexts}
+
+
+def _source_payloads(tool_outcomes: list[Any]) -> list[dict[str, Any]]:
+    payloads: list[dict[str, Any]] = []
     for outcome in tool_outcomes:
-        lines.extend(_format_outcome(outcome))
-    if not tool_outcomes:
-        lines.append('- No tools were run.')
-    if regulatory_context:
-        lines.extend(['', '### Regulatory context'])
-        lines.extend(_format_regulatory_context(regulatory_context))
-    return {'report_markdown': '\n'.join(lines)}
+        if hasattr(outcome, 'as_dict'):
+            payload = outcome.as_dict()
+            payload['full_text'] = getattr(outcome, 'full_text', None)
+            payloads.append(payload)
+    return payloads
+
+
+def assess_evidence(state: IntakeState) -> IntakeState:
+    if state.get('error'):
+        return {}
+    checklist = state.get('checklist') or []
+    tool_outcomes = state.get('tool_outcomes') or []
+    if not state.get('live_mode'):
+        return {'assessment': build_offline_assessment(checklist)}
+
+    live_settings = load_live_settings()
+    source_payloads = _source_payloads(tool_outcomes)
+    if not live_settings.tavily_api_key:
+        return {'error': 'Missing TAVILY_API_KEY for live mode.'}
+
+    if not state.get('exact_model_id'):
+        return {'error': 'Missing exact model ID.'}
+
+    config = load_rag_config_from_env()
+    if not config.get('OPENAI_API_KEY'):
+        return {'error': 'Missing OPENAI_API_KEY for live assessment.'}
+
+    try:
+        raw_output, usage = call_openai_assessment(
+            config['OPENAI_API_KEY'],
+            checklist,
+            {
+                'provider': state.get('provider'),
+                'normalized_provider': state.get('normalized_provider'),
+                'model_provider': state.get('model_provider'),
+                'hosting_platform': state.get('hosting_platform'),
+                'exact_model_id': state.get('exact_model_id'),
+                'target_kind': state.get('target_kind'),
+            },
+            source_payloads,
+            timeout_seconds=live_settings.assessment_timeout_seconds,
+        )
+    except AssessmentFailure as exc:
+        usage_text = None
+        if exc.usage:
+            prompt_tokens = exc.usage.get('input_tokens') or exc.usage.get('prompt_tokens')
+            completion_tokens = exc.usage.get('output_tokens') or exc.usage.get('completion_tokens')
+            if prompt_tokens is not None or completion_tokens is not None:
+                usage_text = f'input tokens {prompt_tokens if prompt_tokens is not None else "n/a"}, output tokens {completion_tokens if completion_tokens is not None else "n/a"}'
+        error = f'Assessment request failed at {exc.stage} stage: {exc.reason}'
+        if usage_text:
+            error = f'{error} Usage: {usage_text}.'
+        elif not error.endswith('.'):
+            error = f'{error}.'
+        return {
+            'assessment': build_partial_assessment(checklist, exc.reason, failure_stage=exc.stage, usage=exc.usage),
+            'error': error,
+        }
+    except Exception as exc:
+        return {'error': f'Assessment request failed: {exc.__class__.__name__}.'}
+
+    preliminary = normalize_assessment_output(
+        raw_output,
+        checklist,
+        source_payloads,
+        state['exact_model_id'],
+        regulatory_context=state.get('regulatory_contexts') or {},
+    )
+    candidate_urls: list[str] = []
+    for finding in preliminary.get('findings', []):
+        for key in ('source_url', 'link_check_url'):
+            url = finding.get(key)
+            if isinstance(url, str) and url and url not in candidate_urls:
+                candidate_urls.append(url)
+    link_checks = check_public_urls(candidate_urls, timeout_seconds=15.0, max_checks=6)
+    assessment = normalize_assessment_output(
+        raw_output,
+        checklist,
+        source_payloads,
+        state['exact_model_id'],
+        regulatory_context=state.get('regulatory_contexts') or {},
+        link_checks=link_checks,
+    )
+    assessment['request_usage'] = usage
+    assessment['aggregate_usage'] = usage
+    assessment['usage'] = usage
+    assessment['request_output_token_cap'] = 4000
+    return {'assessment': assessment}
+
+
+def render_report(state: IntakeState) -> IntakeState:
+    if state.get('error') and not state.get('assessment'):
+        return {}
+    checklist = state.get('checklist') or []
+    assessment = state.get('assessment') or {}
+    return {
+        'report_markdown': render_assessment_markdown(
+            {
+                'live_mode': state.get('live_mode'),
+                'exact_model_id': state.get('exact_model_id'),
+                'provider': state.get('provider'),
+                'model_provider': state.get('model_provider'),
+                'hosting_platform': state.get('hosting_platform'),
+                'target_kind': state.get('target_kind'),
+            },
+            checklist,
+            _source_payloads(state.get('tool_outcomes') or []),
+            assessment,
+            state.get('regulatory_contexts') or {},
+        )
+    }
 
 
 def build_graph():
     graph = StateGraph(IntakeState)
     graph.add_node('validate_and_normalize_target', validate_and_normalize_target)
+    graph.add_node('load_checklist', load_checklist_node)
     graph.add_node('collect_sources', collect_sources)
-    graph.add_node('render_markdown', render_markdown)
+    graph.add_node('retrieve_regulatory_contexts', retrieve_regulatory_contexts)
+    graph.add_node('assess_evidence', assess_evidence)
+    graph.add_node('render_report', render_report)
     graph.add_edge(START, 'validate_and_normalize_target')
-    graph.add_edge('validate_and_normalize_target', 'collect_sources')
-    graph.add_edge('collect_sources', 'render_markdown')
-    graph.add_edge('render_markdown', END)
+    graph.add_edge('validate_and_normalize_target', 'load_checklist')
+    graph.add_edge('load_checklist', 'collect_sources')
+    graph.add_edge('collect_sources', 'retrieve_regulatory_contexts')
+    graph.add_edge('retrieve_regulatory_contexts', 'assess_evidence')
+    graph.add_edge('assess_evidence', 'render_report')
+    graph.add_edge('render_report', END)
     return graph.compile()
 
 

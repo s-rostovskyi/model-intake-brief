@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
@@ -11,6 +11,7 @@ class LiveSettings:
     tavily_timeout_seconds: float
     jina_timeout_seconds: float
     hf_timeout_seconds: float
+    assessment_timeout_seconds: float
     rag_timeout_seconds: float = 15.0
 
 
@@ -54,5 +55,6 @@ def load_live_settings() -> LiveSettings:
         tavily_timeout_seconds=float(_resolve_setting('INTAKE_TAVILY_TIMEOUT_SECONDS', merged, '15') or '15'),
         jina_timeout_seconds=float(_resolve_setting('INTAKE_JINA_TIMEOUT_SECONDS', merged, '15') or '15'),
         hf_timeout_seconds=float(_resolve_setting('INTAKE_HF_TIMEOUT_SECONDS', merged, '15') or '15'),
+        assessment_timeout_seconds=float(_resolve_setting('INTAKE_ASSESSMENT_TIMEOUT_SECONDS', merged, '90') or '90'),
         rag_timeout_seconds=float(_resolve_setting('INTAKE_RAG_TIMEOUT_SECONDS', merged, '15') or '15'),
     )
