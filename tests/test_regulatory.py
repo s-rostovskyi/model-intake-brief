@@ -144,12 +144,12 @@ def test_retrieve_regulatory_context_batch_uses_one_embedding_call(monkeypatch):
 
     def fake_embed_texts(texts, api_key, timeout_seconds):
         captured['texts'] = list(texts)
-        return [[0.3] * regulatory.OPENAI_EMBEDDING_DIMENSION for _ in texts]
+        # a distinct vector per text: Pinecone queries now run concurrently, so call order must not matter
+        return [[0.3 + 0.1 * index] * regulatory.OPENAI_EMBEDDING_DIMENSION for index, _ in enumerate(texts)]
 
     def fake_post(url, headers=None, json=None, timeout=None):
-        index = len(captured.get('calls', []))
         captured.setdefault('calls', []).append(json)
-        if index == 0:
+        if json['vector'][0] < 0.35:
             provision = 'Article 53(1)(b)'
             chunk_id = 'ai-act-art53-1b'
         else:
@@ -190,3 +190,36 @@ def test_retrieve_regulatory_context_batch_uses_one_embedding_call(monkeypatch):
     assert captured['texts'] == ['official integration instructions and API call', 'public summary of training content']
     assert results['US-03'].hits[0].provision == 'Article 53(1)(b)'
     assert results['DT-03'].hits[0].provision == 'Article 53(1)(d)'
+
+
+def test_batch_retrieval_runs_queries_concurrently_and_keeps_item_order(monkeypatch):
+    import threading
+    import time
+
+    ids = [f'ITEM-{n}' for n in range(8)]
+    active, peak, lock = 0, 0, threading.Lock()
+
+    monkeypatch.setattr(regulatory, 'describe_index',
+                        lambda *a, **k: {'dimension': regulatory.OPENAI_EMBEDDING_DIMENSION, 'host': 'h.svc.pinecone.io'})
+    monkeypatch.setattr(regulatory, 'embed_texts',
+                        lambda texts, key, timeout: [[float(n)] * regulatory.OPENAI_EMBEDDING_DIMENSION for n, _ in enumerate(texts)])
+
+    def fake_query(index_info, namespace, api_key, api_version, vector, timeout_seconds, top_k):
+        nonlocal active, peak
+        with lock:
+            active += 1
+            peak = max(peak, active)
+        time.sleep(0.05 * (8 - vector[0]))  # earlier items finish last, so order cannot come from timing
+        with lock:
+            active -= 1
+        hit = regulatory.RetrievalHit(f'chunk-{int(vector[0])}', 'p', 'u', 0.9, 'v', 'e')
+        return [hit], []
+
+    monkeypatch.setattr(regulatory, '_query_regulatory_hits', fake_query)
+    results = regulatory.retrieve_regulatory_context_batch(ids, {
+        'OPENAI_API_KEY': 'k', 'PINECONE_API_KEY': 'p', 'PINECONE_INDEX_NAME': 'i',
+        'PINECONE_NAMESPACE': regulatory.PINECONE_NAMESPACE})
+
+    assert list(results) == ids
+    assert [results[i].hits[0].chunk_id for i in ids] == [f'chunk-{n}' for n in range(8)]
+    assert 1 < peak <= regulatory.RETRIEVAL_WORKERS

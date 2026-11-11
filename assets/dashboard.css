@@ -1,0 +1,65 @@
+/* Report overview dashboard. Uses the --mib-* tokens from tokens.css (light and dark). */
+.idash { --d-found: var(--mib-success); --d-partial: var(--mib-warning); --d-missing: var(--mib-error);
+  --d-unchecked: var(--mib-neutral-accent); color: var(--mib-text); display: grid; gap: 1.4rem; margin-top: .4rem; }
+.stApp .idash h3 { margin: 0 0 .55rem !important; padding: 0 !important; font-size: .74rem !important; font-weight: 700 !important;
+  letter-spacing: .08em; line-height: 1.2 !important; text-transform: uppercase; color: var(--mib-text-2) !important; }
+.stApp .idash ul, .stApp .idash ol, .stApp .idash dl { padding-left: 0 !important; margin-left: 0 !important; }
+.stApp .idash dd { margin-left: 0 !important; }
+.idash section { min-width: 0; }
+.idash-note { margin: .55rem 0 0; font-size: .78rem; line-height: 1.35; color: var(--mib-text-2); }
+
+/* verdict */
+.idash-big { margin: 0 0 .6rem; font-size: 1.15rem; line-height: 1.25; }
+.idash-big b { font-size: 2.1rem; font-weight: 700; font-variant-numeric: tabular-nums; margin-right: .15rem; }
+.idash-bar { display: flex; height: .9rem; gap: 2px; border-radius: 999px; overflow: hidden; background: var(--mib-surface-3); }
+.idash-seg, .idash-cells i { background: var(--d-unchecked); }
+.idash [data-s="found"] { --d-c: var(--d-found); }
+.idash [data-s="partial"] { --d-c: var(--d-partial); }
+.idash [data-s="missing"] { --d-c: var(--d-missing); }
+.idash [data-s="unchecked"] { --d-c: var(--d-unchecked); }
+.idash-seg[data-s], .idash-cells i[data-s] { background: var(--d-c); }
+.idash-legend { display: flex; flex-wrap: wrap; gap: .3rem 1.1rem; margin: .6rem 0 0; padding: 0; list-style: none; font-size: .82rem; color: var(--mib-text-2); }
+.idash-legend li::before { content: ""; display: inline-block; width: .62rem; height: .62rem; margin-right: .38rem;
+  border-radius: 3px; background: var(--d-c); vertical-align: -1px; }
+.idash-legend b { color: var(--mib-text); font-variant-numeric: tabular-nums; }
+
+/* two columns: gaps by group + provider questions */
+.idash-pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr)); gap: 1.4rem 2rem; }
+.idash-groups { margin: 0; padding: 0; list-style: none; display: grid; gap: .55rem; }
+.idash-groups li { display: grid; grid-template-columns: 11rem auto auto; justify-content: start; align-items: center; gap: .7rem; font-size: .88rem; }
+.idash-gname { min-width: 0; }
+.idash-cells { display: flex; flex-wrap: wrap; gap: 4px; }
+.idash-cells i { display: block; width: 1.15rem; height: 1.15rem; border-radius: 4px; }
+.idash-gcount { font-variant-numeric: tabular-nums; color: var(--mib-text-2); font-size: .82rem; }
+
+.idash-questions { margin: 0; padding: 0; list-style: none; display: grid; gap: .7rem; }
+.idash-questions li { display: grid; grid-template-columns: auto 1fr; gap: .65rem; align-items: start; font-size: .9rem; line-height: 1.35; }
+.idash-questions em { display: block; margin-top: .1rem; font-style: normal; font-size: .74rem; color: var(--mib-text-2); }
+.idash-id { min-width: 2.6rem; box-sizing: border-box; text-align: center; padding: .08rem .45rem; border-radius: 6px; border: 2px solid var(--d-c); font-size: .74rem; font-weight: 700;
+  font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* trust tiles */
+.idash-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: .75rem; margin: 0; padding: 0; }
+.idash-tile { padding: .7rem .8rem; border: 1px solid var(--mib-border-subtle); border-top: 4px solid var(--d-unchecked);
+  border-radius: 10px; background: var(--mib-surface-2); }
+.idash-tile[data-tone="good"] { border-top-color: var(--d-found); }
+.idash-tile[data-tone="warn"] { border-top-color: var(--d-partial); }
+.idash-tile[data-tone="bad"] { border-top-color: var(--d-missing); }
+.idash-tile dt { margin: 0; font-size: .78rem; font-weight: 600; color: var(--mib-text-2); line-height: 1.25; }
+.idash-tile dd { margin: .25rem 0 0; padding: 0; font-size: 1.55rem; font-weight: 650; font-variant-numeric: tabular-nums; }
+.idash-tile p { margin: .25rem 0 0; font-size: .75rem; line-height: 1.3; color: var(--mib-text-2); overflow-wrap: anywhere; }
+
+/* regulatory pointers */
+.idash-reg { margin: 0; padding: 0; list-style: none; display: grid; gap: .3rem; font-size: .88rem; }
+.idash-reg li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .1rem .8rem; padding: .3rem 0;
+  border-bottom: 1px solid var(--mib-border-subtle); }
+.idash-reg span { color: var(--mib-text-2); font-variant-numeric: tabular-nums; }
+
+/* run facts stay visible, but small */
+.idash-foot { margin: 0; padding-top: .7rem; border-top: 1px solid var(--mib-border-subtle); font-size: .8rem; color: var(--mib-text-2); }
+.idash-foot b { color: var(--mib-text); font-variant-numeric: tabular-nums; }
+
+@media (max-width: 640px) { .idash-groups li { grid-template-columns: 1fr auto; } .idash-cells { grid-column: 1 / -1; order: 3; } }
+
+.idash-legend a { color: inherit; text-decoration: none; border-bottom: 1px dotted var(--mib-text-2); }
+.idash-legend a:hover { border-bottom-style: solid; }

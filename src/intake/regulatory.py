@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -8,6 +9,8 @@ from typing import Any
 import requests
 
 from .settings import load_env_file
+
+RETRIEVAL_WORKERS = 6  # concurrent Pinecone queries per retrieval batch
 
 
 CORPUS_VERSION = "regulatory-v1-2026-11-10"
@@ -528,8 +531,10 @@ def retrieve_regulatory_context_batch(
     index_info = describe_index(status.index_name, api_key, config.get("PINECONE_API_VERSION"), timeout_seconds)
     queries = [default_query_for_item(item_id) for item_id in item_ids]
     embeddings = embed_texts(queries, openai_key, timeout_seconds)
-    for item_id, query, query_vector in zip(item_ids, queries, embeddings, strict=True):
-        hits, query_blockers = _query_regulatory_hits(
+    # The queries are independent, so they run concurrently. map() keeps the input order,
+    # and the first failure (if any) is raised exactly as the sequential loop raised it.
+    def run_query(query_vector: list[float]) -> tuple[list[RetrievalHit], list[str]]:
+        return _query_regulatory_hits(
             index_info,
             status.namespace,
             api_key,
@@ -538,6 +543,10 @@ def retrieve_regulatory_context_batch(
             timeout_seconds,
             top_k,
         )
+
+    with ThreadPoolExecutor(max_workers=min(RETRIEVAL_WORKERS, max(len(embeddings), 1))) as pool:
+        outcomes = list(pool.map(run_query, embeddings))
+    for item_id, query, (hits, query_blockers) in zip(item_ids, queries, outcomes, strict=True):
         results[item_id] = RetrievalResult(query=query, item_id=item_id, hits=hits, blockers=list(blockers) + query_blockers)
     return results
 

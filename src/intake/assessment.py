@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import re
 from collections import Counter
+from concurrent.futures import ThreadPoolExecutor
 from datetime import date
 from typing import Any
 from urllib.parse import urlparse
@@ -135,6 +136,37 @@ def _mentions_conflicting_variant(text: str, exact_model_id: str) -> bool:
     return any(token in normalized_text for token in _conflicting_variant_tokens(exact_model_id))
 
 
+def other_model(quote: str, url: str, target: str) -> str | None:
+    """Identify explicit variants that cannot establish target-specific evidence."""
+    target = re.sub(r'[‐‑–—−]', '-', target.lower()).split('/')[-1]
+    text = re.sub(r'[‐‑–—−]', '-', f'{quote} {url}'.lower())
+    if target.startswith('gpt-'):
+        text = re.sub(r'gpt-(\d+)-(\d{1,2})(?=-|[/.]|$)', r'gpt-\1.\2', text)
+        names = re.findall(r'gpt-\d+(?:\.\d+)?(?:-(?:codex|pro|mini|nano|chat|\d{4}-\d{2}-\d{2}))?', text)
+        family = re.sub(r'-\d{4}-\d{2}-\d{2}$', '', target)
+        generic = family.split('.')[0]
+        allowed = {family, target}
+        if any(name in allowed for name in names):
+            allowed.add(generic)
+        return next((name for name in names if name not in allowed), None)
+    if target.startswith('qwen'):
+        names = re.findall(r'qwen[\d.]+(?:-[a-z0-9]+)*?-\d+(?:\.\d+)?[bm](?:-(?:base|instruct|thinking))?', text)
+        return next((name for name in names if name != target), None)
+    return None
+
+
+def provider_question(criterion: str, model: str) -> str:
+    prompts = {
+        'Input and output modalities': f'Which input and output modalities does {model} support, and where are they documented?',
+        'Distribution and access': f'How can downstream teams access {model}, and where is that access documented?',
+        'Parameter size': f'Can you share the parameter count or a documented size range for {model}?',
+        'Release date': f'When did {model} first become publicly available?',
+        'Licence or access terms': f'Which licence or service terms apply to {model}, and where can reviewers read them?',
+        'Integration instructions': f'Where can downstream teams find official instructions for integrating {model}?',
+    }
+    return prompts.get(criterion, f'Where can we find public documentation for {model} covering {criterion.lower()}?')
+
+
 def quote_applies_to_target(quote: str, exact_model_id: str, model_applicability: str | None = None) -> bool:
     if isinstance(model_applicability, str) and model_applicability.strip():
         normalized_applicability = _normalize_text(model_applicability)
@@ -235,14 +267,19 @@ def check_public_urls(
     max_checks: int = 6,
     allowed_domains: list[str] | None = None,
 ) -> dict[str, dict[str, Any]]:
-    results: dict[str, dict[str, Any]] = {}
+    unique: list[str] = []
     for url in urls:
-        if url in results:
+        if url in unique:
             continue
-        if len(results) >= max_checks:
+        if len(unique) >= max_checks:
             break
-        results[url] = check_public_url(url, timeout_seconds, allowed_domains=allowed_domains)
-    return results
+        unique.append(url)
+    if not unique:
+        return {}
+    # Independent HEAD/GET checks run concurrently; the result keeps the order of `unique`.
+    with ThreadPoolExecutor(max_workers=len(unique)) as pool:
+        checks = list(pool.map(lambda url: check_public_url(url, timeout_seconds, allowed_domains=allowed_domains), unique))
+    return dict(zip(unique, checks))
 
 
 def _extract_response_text(payload: dict[str, Any]) -> str:
@@ -485,6 +522,11 @@ def normalize_assessment_output(
                 source_url = urls[0]
         source_text = _find_text(source_outcome) if source_outcome else ''
 
+        variant = other_model(quote or '', source_url or '', exact_model_id)
+        if variant:
+            status = 'Partial' if status == 'Evidence found' else status
+            gap_explanation = 'Quoted text appeared to describe a different model variant.'
+            quote = None
         if quote:
             if _mentions_conflicting_variant(quote, exact_model_id):
                 if not source_text or not quote_supported(quote, source_text) or exact_model_id.lower() not in _normalize_text(source_text):
@@ -495,6 +537,10 @@ def normalize_assessment_output(
                 status = 'Partial' if status == 'Evidence found' else status
                 gap_explanation = gap_explanation or 'Quoted text was not supported by the extracted source text.'
                 quote = None
+
+        if status == 'Evidence found' and not quote:
+            status = 'Partial'
+            gap_explanation = gap_explanation or 'A verifiable excerpt is needed for this item.'
 
         if status in {'Evidence found', 'Partial'} and not source_text:
             status = 'Not found'
@@ -527,7 +573,9 @@ def normalize_assessment_output(
                 'source_name': source_name if isinstance(source_name, str) else None,
                 'source_url': source_url if isinstance(source_url, str) else None,
                 'source_section': None,
-                'model_applicability': None,
+                'model_applicability': (f'Other model ({variant})' if variant else
+                                        'Review the source for exact-model or family coverage.' if quote else
+                                        'Not established'),
                 'link_check_url': source_url if isinstance(source_url, str) else None,
                 'link_check_outcome': link_check_outcome,
                 'searched_sources': [source_id] if source_id else [],
@@ -536,11 +584,11 @@ def normalize_assessment_output(
                 'provider_question': None,
             }
         )
-        if status != 'Evidence found':
+        if status in {'Partial', 'Not found'} and not item.is_context:
             unresolved_questions.append(
                 {
                     'priority': len(unresolved_questions) + 1,
-                    'question': gap_explanation or f'Please provide public documentation for {item.check}.',
+                    'question': provider_question(item.check, exact_model_id),
                     'related_item_ids': [item.item_id],
                 }
             )
@@ -551,7 +599,7 @@ def normalize_assessment_output(
     return {
         'summary': {
             'headline': 'Assessment complete.',
-            'major_gaps': [question['question'] for question in unresolved_questions[:3]],
+            'major_gaps': [finding['failure_reason'] for finding in normalized_findings if finding['failure_reason']][:3],
             'status_counts': {status: counts.get(status, 0) for status in ALLOWED_STATUSES},
         },
         'findings': normalized_findings,
@@ -773,8 +821,6 @@ def render_markdown(
         if source_id:
             lines.append(f'  - Source ID: {source_id}')
         gap_explanation = finding.get('gap_explanation') or finding.get('failure_reason') or finding.get('summary')
-        if gap_explanation:
-            lines.append(f'  - Gap explanation: {gap_explanation}')
         quote = finding.get('quote')
         if quote:
             lines.append(f'  - Quote: {quote}')
@@ -788,11 +834,10 @@ def render_markdown(
         if source_section:
             lines.append(f'  - Source section: {source_section}')
         model_applicability = finding.get('model_applicability')
-        if model_applicability:
-            lines.append(f'  - Model applicability: {model_applicability}')
+        lines.append(f"  - Model applicability: {model_applicability or 'Not established'}")
         link_check_url = finding.get('link_check_url')
         link_check_outcome = finding.get('link_check_outcome')
-        if link_check_url or link_check_outcome:
+        if quote and (link_check_url or link_check_outcome):
             lines.append(f"  - Link check: {link_check_url or 'n/a'} -> {link_check_outcome or 'not checked'}")
         regulatory_reference = finding.get('regulatory_reference')
         if regulatory_reference:
@@ -803,8 +848,8 @@ def render_markdown(
             for source in searched_sources[:5]:
                 lines.append(f'    - {source}')
         failure_reason = finding.get('failure_reason')
-        if failure_reason:
-            lines.append(f'  - Failure reason: {failure_reason}')
+        if gap_explanation and status != 'Evidence found':
+            lines.append(f'  - Gap: {gap_explanation}')
 
     lines.extend(['', '### Prioritised provider questions'])
     if provider_questions:
@@ -817,6 +862,12 @@ def render_markdown(
                 lines.append(f'- {question}')
     else:
         lines.append('- No unresolved provider questions were identified.')
+
+    lines.extend(['', '### Context only'])
+    for item in checklist_items:
+        if item.is_context:
+            status = finding_map.get(item.item_id, {}).get('status', 'Not checked')
+            lines.append(f'- {item.item_id} · {item.check} · {status}')
 
     lines.extend(['', '### Methods and limitations'])
     for item in methods_and_limitations or []:

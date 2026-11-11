@@ -1,0 +1,229 @@
+/* ==========================================================================
+   Model Intake Brief - theme layer (visual layer only)
+   Load AFTER tokens.css and after the app's own <style> block.
+   No markup, copy, order, navigation or behaviour is changed.
+   Selector strategy: app classes (.intake-*, .st-key-*), Streamlit data-testid
+   and react-aria state attributes (data-focus-visible, data-selected).
+   Emotion hashed classes (.st-emotion-cache-*) are never used.
+   ========================================================================== */
+
+/* ---- 1. Base ------------------------------------------------------------ */
+
+.stApp {
+  background-color: var(--mib-bg);
+  color: var(--mib-text);
+  font-family: var(--mib-font-sans);
+  font-optical-sizing: auto;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+.stApp [data-testid="stMain"] { background: transparent; }
+
+/* ---- 2. Typography ------------------------------------------------------ */
+
+.stApp [data-testid="stMain"] h2 {
+  font-size: var(--mib-fs-700); font-weight: var(--mib-fw-semibold);
+  line-height: var(--mib-lh-tight); letter-spacing: var(--mib-tracking-heading);
+}
+.stApp [data-testid="stMain"] h3 {
+  font-size: var(--mib-fs-600); font-weight: var(--mib-fw-semibold);
+  line-height: var(--mib-lh-snug); letter-spacing: var(--mib-tracking-heading);
+}
+.stApp .intake-hero h1 { letter-spacing: -.015em; }
+.stApp .intake-hero .intake-kicker { font-size: var(--mib-fs-100); letter-spacing: var(--mib-tracking-kicker); }
+.stApp code,
+.stApp pre,
+.stApp [data-testid="stCode"] * { font-family: var(--mib-font-mono); }
+.stApp [data-testid="stMarkdownContainer"] :not(pre) > code {
+  color: var(--mib-code-text); background: var(--mib-surface-3);
+  border-radius: 4px; padding: .1em .35em; font-size: .9em;
+}
+
+/* Secondary text: solid colour instead of opacity .6 (fixes 1.4.3 in light theme) */
+
+.stApp [data-testid="stCaptionContainer"] { opacity: 1 !important; color: var(--mib-text-2) !important; line-height: var(--mib-lh-caption); }
+.stApp [data-testid="stCaptionContainer"] p { color: inherit !important; }
+
+/* ---- 3. Links: one hue, one underline style, visited == unvisited ---------- */
+
+.stApp [data-testid="stMain"] a,
+.stApp [data-testid="stMain"] a:visited {
+  color: var(--mib-link);
+  text-decoration-line: underline; text-decoration-thickness: 1px; text-underline-offset: .18em;
+}
+.stApp [data-testid="stMain"] a:hover { color: var(--mib-link-hover); text-decoration-thickness: 2px; }
+
+/* ---- 4. Hero (art untouched; text tokens + edge only) -------------------- */
+
+.stApp .intake-hero {
+  --hero-accent: var(--mib-hero-kicker);
+  border: 1px solid var(--mib-border-subtle);
+  border-radius: var(--mib-radius-hero);
+}
+
+/* ---- 5. Report overview card + KPI tiles -------------------------------- */
+
+.stApp .st-key-intake-overview {
+  background: var(--mib-surface-1) !important;
+  border: var(--mib-bw-1) solid var(--mib-border-subtle) !important;
+  border-top: var(--mib-bw-accent) solid var(--mib-primary) !important;
+  border-radius: var(--mib-radius-card) !important;
+  box-shadow: var(--mib-shadow-1);
+}
+.stApp .intake-metrics { padding: 0 !important; margin: 0; gap: var(--mib-space-3); }
+
+/* removes the 32px indent */   
+.stApp .intake-metric {
+  background-color: var(--mib-surface-2);
+  border: var(--mib-bw-1) solid var(--mib-border-subtle);
+  border-radius: var(--mib-radius-tile);
+  box-shadow: var(--mib-shadow-1);
+  padding: var(--mib-space-3) var(--mib-space-2);
+}
+.stApp .intake-metric[data-status="found"] { border-top: var(--mib-bw-accent) solid var(--mib-success); }
+.stApp .intake-metric[data-status="partial"] { border-top: var(--mib-bw-accent) solid var(--mib-warning); }
+.stApp .intake-metric[data-status="missing"] { border-top: var(--mib-bw-accent) solid var(--mib-error); }
+.stApp .intake-metric[data-status="unchecked"] { border-top: var(--mib-bw-accent) solid var(--mib-neutral-accent); }
+.stApp .intake-metric dt { font-size: var(--mib-fs-200); font-weight: var(--mib-fw-semibold); line-height: var(--mib-lh-snug); color: var(--mib-text-2); }
+.stApp .intake-metric dd {
+  font-size: var(--mib-fs-kpi); font-weight: 650; color: var(--mib-text);
+  font-variant-numeric: tabular-nums lining-nums; overflow-wrap: anywhere;
+}
+
+/* ---- 6. Inputs, select, radio, checkbox --------------------------------- */
+
+.stApp [data-testid="stTextInputRootElement"],
+.stApp [data-testid="stSelectbox"] [role="group"] {
+  background: var(--mib-surface-2) !important;
+  border: var(--mib-bw-1) solid var(--mib-border-control) !important;
+  border-radius: var(--mib-radius-control) !important;
+  transition: border-color var(--mib-dur-fast) var(--mib-ease), box-shadow var(--mib-dur-fast) var(--mib-ease);
+}
+.stApp [data-testid="stTextInputRootElement"]:hover,
+.stApp [data-testid="stSelectbox"] [role="group"]:hover { border-color: var(--mib-border-strong) !important; }
+.stApp [data-testid="stTextInputRootElement"]:focus-within,
+.stApp [data-testid="stSelectbox"] [role="group"]:focus-within {
+  border-color: var(--mib-focus) !important;
+  box-shadow: 0 0 0 var(--mib-bw-1) var(--mib-focus) !important;
+}
+.stApp [data-testid="stTextInput"] input::placeholder,
+.stApp [data-testid="stSelectbox"] input::placeholder { color: var(--mib-text-2); opacity: 1; }
+.stApp [data-testid="stTextInputIcon"],
+.stApp [data-testid="stSelectbox"] svg { color: var(--mib-text-2); }
+
+/* radio: ring = div:first-child inside the option's visual wrapper */
+
+.stApp [data-testid="stRadioOption"] > div > div:first-child {
+  background: var(--mib-surface-2); border: var(--mib-bw-1) solid var(--mib-border-control);
+}
+.stApp [data-testid="stRadioOption"][data-selected="true"] > div > div:first-child {
+  background: var(--mib-primary); border-color: var(--mib-primary);
+}
+.stApp [data-testid="stRadioOption"][data-selected="true"] > div > div:first-child > div { background: var(--mib-on-primary); }
+.stApp [data-testid="stRadioOption"][data-focus-visible="true"] > div > div:first-child,
+.stApp [data-testid="stRadioOption"]:has(input:focus-visible) > div > div:first-child {
+  outline: var(--mib-bw-focus) solid var(--mib-focus); outline-offset: 2px;        /* radio had NO visible focus */
+}
+
+/* ---- 7. Buttons --------------------------------------------------------- */
+
+.stApp [data-testid="stBaseButton-secondary"],
+.stApp [data-testid="stPopoverButton"],
+.stApp [data-testid="stDownloadButton"] button {
+  background: var(--mib-surface-2); color: var(--mib-text);
+  border: var(--mib-bw-1) solid var(--mib-border-control); border-radius: var(--mib-radius-control);
+  font-weight: var(--mib-fw-medium);
+  transition: background-color var(--mib-dur-fast) var(--mib-ease), border-color var(--mib-dur-fast) var(--mib-ease);
+}
+.stApp [data-testid="stBaseButton-secondary"]:hover,
+.stApp [data-testid="stPopoverButton"]:hover,
+.stApp [data-testid="stDownloadButton"] button:hover {
+  background: var(--mib-surface-3); border-color: var(--mib-border-strong);
+}
+.stApp [data-testid="stBaseButton-primary"],
+.stApp [data-testid="stBaseButton-primaryFormSubmit"] {
+  background: var(--mib-primary) !important; color: var(--mib-on-primary) !important;
+  border: var(--mib-bw-1) solid var(--mib-primary) !important; border-radius: var(--mib-radius-control);
+  font-weight: var(--mib-fw-semibold);
+}
+.stApp [data-testid="stBaseButton-primary"]:hover,
+.stApp [data-testid="stBaseButton-primaryFormSubmit"]:hover {
+  background: var(--mib-primary-hover) !important; border-color: var(--mib-primary-hover) !important; color: var(--mib-on-primary) !important;
+}
+.stApp [data-testid="stBaseButton-primary"] :is(p, span),
+.stApp [data-testid="stBaseButton-primaryFormSubmit"] :is(p, span) { color: inherit !important; }
+
+/* ---- 8. Expanders (collapsed rows, evidence panels) ----------------------- */
+
+.stApp [data-testid="stExpander"] details {
+  background: var(--mib-surface-1); border: var(--mib-bw-1) solid var(--mib-border-subtle);
+  border-radius: var(--mib-radius-control);
+}
+.stApp [data-testid="stExpander"] summary:hover { background: var(--mib-surface-3); }
+.stApp [data-testid="stExpanderDetails"] { border-color: var(--mib-border-subtle); }
+.stApp .st-key-intake-overview [data-testid="stExpander"] details { background: var(--mib-surface-2); }
+
+/* ---- 9. Code block ------------------------------------------------------ */
+
+.stApp [data-testid="stCode"] pre,
+.stApp [data-testid="stCode"] { background: var(--mib-surface-3) !important; border-radius: var(--mib-radius-control); }
+
+/* ---- 10. Overlays: dropdown + User guide popover ------------------------- */
+
+/* NOT THEMED BY THIS LAYER. Streamlit mounts overlays (User guide popover, Report listbox) in
+   #stFloatingOverlayPortal, outside .stApp, and sets color-scheme only through a hashed class on
+   the app root. A stable hook that follows a manually chosen theme does not exist, so styling them
+   from here could show a light overlay in a dark app. Native overlays measured as passing
+   (popover text min 6.25:1 light, option text about 14:1). The --mib-surface-overlay and
+   --mib-shadow-overlay tokens are kept for when the theme is set natively (see report section 6). */
+
+/* ---- 11. Info alert (empty state) + loading banner ----------------------- */
+
+.stApp [data-testid="stAlertContainer"]:has([data-testid="stAlertContentInfo"]) {
+  background: var(--mib-info-container) !important;
+  border-radius: var(--mib-radius-card) !important;
+}
+.stApp .intake-wait { background: var(--mib-wait-bg); border-radius: var(--mib-radius-card); color: var(--mib-wait-text); }
+.stApp .intake-wait span { color: var(--mib-wait-text-2); }
+.stApp .intake-reels i { background: var(--mib-wait-accent); }
+
+/* ---- 11b. Leftovers found on "Run a new analysis" ------------------------ */
+
+/* Info alert: app's own blue (#0054a3 on #e8f1ff, 6.6:1) is AA but off-palette; same container, palette text role (15.06:1) */
+.stApp [data-testid="stAlertContainer"]:has([data-testid="stAlertContentInfo"]),
+.stApp [data-testid="stAlertContentInfo"],
+.stApp [data-testid="stAlertContentInfo"] :is(p, span, div, a) { color: var(--mib-on-info-container) !important; }
+/* "(required)": alpha .6 text replaced by the solid secondary text role */
+.stApp [data-testid="stWidgetLabelRequired"] { color: var(--mib-text-2) !important; opacity: 1 !important; }
+/* Checkbox: box border was rgb(197,211,225) = 1.45:1 on the page (fails 1.4.11) */
+.stApp [data-testid="stCheckbox"] label > span + div {
+  background: var(--mib-surface-2) !important; border: var(--mib-bw-1) solid var(--mib-border-control) !important; border-radius: 4px !important;
+}
+.stApp [data-testid="stCheckbox"] label:has(input:checked) > span + div {
+  background: var(--mib-primary) !important; border-color: var(--mib-primary) !important; color: var(--mib-on-primary) !important;
+}
+.stApp [data-testid="stCheckbox"] label:has(input:focus-visible) > span + div {
+  outline: var(--mib-bw-focus) solid var(--mib-focus) !important; outline-offset: 2px !important;
+}
+/* Radio hover chip: app uses rgba(160,184,212,.25); use the neutral surface tone */
+.stApp [data-testid="stRadioOption"]:hover { background: var(--mib-surface-3); border-radius: var(--mib-radius-control); }
+
+/* ---- 12. One focus indicator for everything else (2.4.7 / 1.4.11) --------- */
+
+.stApp :is(a, button, summary, [tabindex="0"]):focus-visible {
+  outline: var(--mib-bw-focus) solid var(--mib-focus) !important; outline-offset: 2px !important; box-shadow: none !important;
+}
+.stApp main:focus-visible { outline: var(--mib-bw-focus) solid var(--mib-focus) !important; outline-offset: -3px !important; }
+
+/* scroll region: app intended a ring, computed style was none */
+
+/* ---- 13. Motion: tokens above; reduced motion kills non-essential motion --- */
+
+@media (prefers-reduced-motion: reduce) {
+  .stApp *,
+.stApp *::before,
+.stApp *::after {
+    transition-duration: .01ms !important; animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important; scroll-behavior: auto !important;
+  }
+}

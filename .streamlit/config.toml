@@ -1,0 +1,27 @@
+[theme]
+showWidgetBorder = true
+baseRadius = "8px"
+buttonRadius = "8px"
+
+[theme.light]
+primaryColor = "#0f6b57"
+backgroundColor = "#f6fafb"
+secondaryBackgroundColor = "#ffffff"
+textColor = "#181c1e"
+borderColor = "#6e797c"
+linkColor = "#0f6b57"
+codeTextColor = "#1e511e"
+codeBackgroundColor = "#ebeef0"
+
+[theme.dark]
+primaryColor = "#6bbaa3"
+backgroundColor = "#14181a"
+secondaryBackgroundColor = "#262b2c"
+textColor = "#eef1f3"
+borderColor = "#889396"
+linkColor = "#86d6bd"
+codeTextColor = "#9cd593"
+codeBackgroundColor = "#101415"
+
+[client]
+toolbarMode = "viewer"
