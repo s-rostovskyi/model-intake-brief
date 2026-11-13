@@ -1,125 +1,164 @@
 # Model Intake Brief
 
-An offline-first LangGraph CLI with a lightweight Streamlit page for previewing saved reports and running the existing workflow only after an explicit click.
+An autonomous LangGraph agent that reviews the public documentation of an AI model before a company integrates it. You give it a model ID. It finds the provider's documentation, reads it, checks it against a fixed 18-item checklist based on the EU AI Act rules for general-purpose AI models (Article 53, Annexes XI and XII) and the GPAI Code of Practice, and writes a structured Markdown brief: what is documented, what is missing, and what to ask the provider.
 
-## Scope
-- CLI report generation for Hugging Face IDs and hosted provider + model IDs.
-- Live source collection with Tavily Search, Jina Reader, Hugging Face Hub, OpenAI assessment, and regulatory retrieval.
-- Saved sample reports in `samples/` for offline preview.
-- Streamlit interface for opening saved reports and launching the same graph manually.
+**Information, not legal advice.** The brief reports what public sources say. It does not decide compliance.
 
-## Verified locally in this checkout
-The interpreter, tests, and saved-report preview were verified here with the existing Miniconda interpreter.
+- **Demo recording:** _add the link here (Loom, YouTube unlisted or Google Drive, opens without a login)_
+- **Slides:** [presentation/project3_slides.pdf](presentation/project3_slides.pdf)
+- **Stack decision:** [stack_decision.md](stack_decision.md)
+- **Future GTM sprints:** [gtm_future_sprints.md](gtm_future_sprints.md)
+- **Sample reports:** [Qwen/Qwen3-8B](samples/qwen3-8b.md) (open weights, detailed model card) and [GPT-5.2](samples/gpt-5.2.md) (closed, hosted API)
 
-1. Confirm the active interpreter:
-   - `C:\Users\serge\miniconda3\python.exe -c "import sys; print(sys.executable)"`
-2. Run the offline and mocked verification suite:
-   - `PYTHONPATH=src C:\Users\serge\miniconda3\python.exe -m pytest -q`
-3. Verify the Streamlit helpers load both saved reports without calling the graph.
+## Problem and user
 
-## Fresh-clone checks
-Repeat these after a clean clone if you need to confirm the environment from scratch.
+An AI governance lead, AI PMO or risk reviewer has to approve third-party models before teams build on them. Today that means hours of searching model cards, docs and trust pages, and the result depends on who did the search. The brief gives the reviewer a repeatable first pass: every checklist item gets a status (evidence found, partial, not found or not checked), a verified quote and a link where evidence exists, and a prioritised list of questions for the provider where it does not.
 
-- Run the editable install command in the setup section if the Miniconda environment does not already have the package installed.
-- Re-run the test suite command above.
-- Launch the Streamlit page with the commands in the run section below and confirm that opening the page and switching samples does not trigger any live call.
+## Setup
 
-## Run commands
-Use the existing Miniconda interpreter and `PYTHONPATH=src`.
+Requirements: Python 3.11 or later, and Git.
 
-### Offline CLI
-- Hugging Face checkpoint: `PYTHONPATH=src C:\Users\serge\miniconda3\python.exe -m intake run --model Qwen/Qwen3-8B`
-- Hosted checkpoint: `PYTHONPATH=src C:\Users\serge\miniconda3\python.exe -m intake run --provider openai --model gpt-5.2-2025-12-11`
-- Invalid input: `PYTHONPATH=src C:\Users\serge\miniconda3\python.exe -m intake run --model invalid`
-
-### Live research and indexing
-- Hugging Face live draft: `PYTHONPATH=src C:\Users\serge\miniconda3\python.exe -m intake run --live --model Qwen/Qwen3-8B`
-- Hosted live draft: `PYTHONPATH=src C:\Users\serge\miniconda3\python.exe -m intake run --live --provider openai --model gpt-5.2-2025-12-11`
-- Stability check, same analysis several times, then a table of which checks keep their status: `PYTHONPATH=src C:\Users\serge\miniconda3\python.exe -m intake stability --live --model Qwen/Qwen3-8B -n 5 --out stability.md`. Every run is a real live run (Tavily, Jina Reader, Pinecone, OpenAI credits). Runs go one after another with `--pause` seconds between them (default 2). Without `--live` it only compares fixtures and says so.
-- Regulatory index command: `PYTHONPATH=src C:\Users\serge\miniconda3\python.exe -m intake index-regulatory`
-
-### Streamlit page
-- `PYTHONPATH=src C:\Users\serge\miniconda3\python.exe -m streamlit run app.py`
-
-## Environment variables
-The live commands read `.env` only when you run a live or indexing command.
-
-- `TAVILY_API_KEY`
-- `INTAKE_PROVIDER_DOMAINS`
-- `INTAKE_TAVILY_TIMEOUT_SECONDS`
-- `INTAKE_JINA_TIMEOUT_SECONDS`
-- `INTAKE_HF_TIMEOUT_SECONDS`
-- `INTAKE_ASSESSMENT_TIMEOUT_SECONDS`
-- `INTAKE_RAG_TIMEOUT_SECONDS`
-- `OPENAI_API_KEY`
-- `PINECONE_API_KEY`
-- `PINECONE_INDEX_NAME`
-- `PINECONE_NAMESPACE`
-- `PINECONE_API_VERSION`
-
-## Architecture
-```mermaid
-flowchart LR
-    UI[CLI or Streamlit page] --> GRAPH[LangGraph workflow]
-    GRAPH --> TARGET[Validate target]
-    GRAPH --> SOURCES[Collect sources]
-    SOURCES --> TOOLS[Tavily, Jina, Hugging Face]
-    GRAPH --> RAG[Regulatory retrieval]
-    GRAPH --> ASSESS[OpenAI structured assessment]
-    GRAPH --> RENDER[Markdown renderer]
-    RAG --> PINECONE[Pinecone corpus]
-    UI --> SAMPLES[Saved reports in samples/]
+```bash
+git clone https://github.com/s-rostovskyi/model-intake-brief.git
+cd model-intake-brief
+python -m venv .venv
+# Windows PowerShell: .venv\Scripts\Activate.ps1    macOS / Linux: source .venv/bin/activate
+python -m pip install -e .
 ```
 
-## Pipeline view
-The Streamlit page draws the workflow in a collapsible section under the form in **Run a new analysis**.
+`pip install -e .` installs the `intake` package and its dependencies (`langgraph`, `pydantic`, `requests`, `streamlit`) from `pyproject.toml`. The offline preview and the saved reports need nothing else.
 
-- The nodes and edges come from `APP.get_graph()`, so the diagram follows the code.
-- Nodes and the tool calls inside them emit small dict events with `get_stream_writer()`. `iter_run()` reads them with `stream_mode=['updates', 'custom']`. Outside a streaming run the events are dropped, so `invoke()` and the CLI behave as before.
-- `validate_and_normalize_target` has a conditional edge: on `error` the run goes straight to `render_report`.
-- `collect_sources` and `retrieve_regulatory_contexts` run in parallel after `load_checklist`; `assess_evidence` waits for both and skips itself if collection failed. Inside `collect_sources` the two Tavily searches and the Hub lookup run together, then the Jina reads. Pinecone queries and link checks also run concurrently. Results keep a fixed order, so source IDs and the report do not depend on timing.
-- Worker threads run in a copy of the LangGraph context (`_parallel()` in `graph.py`), which is what keeps `get_stream_writer()` working in them.
-- Events are stored in `st.session_state['last_trace']`, which powers **Replay last run** without API calls.
-- **Demo pace** only delays the redraw of an offline run. `LayerGate` also holds a node's events until its parallel sibling has started, so side-by-side nodes are drawn running together. It is not part of the graph and is excluded from the reported run time.
-- `st.html` removes inline SVG, so the diagram uses HTML and CSS only.
+For live analysis:
 
-## Tools
-- `Tavily Search` discovers candidate URLs for live research.
-- `Jina Reader` extracts text from public pages after HTTPS and host validation.
-- `Hugging Face Hub` fetches public metadata for Hugging Face model IDs.
-- `OpenAI Responses` performs the structured evidence assessment with a 4,000-output-token cap.
-- `Pinecone` stores and retrieves the small regulatory corpus.
+1. Copy `.env.example` to `.env` and fill in your own keys. `.env` is ignored by Git. Never commit it.
+2. Create a Pinecone index with dense vectors of dimension `1536` and cosine similarity, and put its name in `PINECONE_INDEX_NAME`.
+3. Load the regulatory corpus into it once: `python -m intake index-regulatory`.
 
-## Indexing and retrieval
-- Index the regulatory corpus with `PYTHONPATH=src C:\Users\serge\miniconda3\python.exe -m intake index-regulatory`.
-- Retrieval happens inside the graph after the checklist is loaded.
-- The configured namespace stays separate from other Pinecone data.
-- The checked corpus covers the verified AI Act passages plus the verified GPAI Code of Practice transparency measures 1.1 and 1.2.
+| Variable | Used for |
+|---|---|
+| `TAVILY_API_KEY` | Tavily Search |
+| `OPENAI_API_KEY` | Assessment model and embeddings |
+| `PINECONE_API_KEY`, `PINECONE_INDEX_NAME`, `PINECONE_NAMESPACE`, `PINECONE_API_VERSION` | Regulatory retrieval |
+| `INTAKE_PROVIDER_DOMAINS` | Official domains for hosted models, comma-separated (for OpenAI: `openai.com,platform.openai.com,developers.openai.com,help.openai.com,cdn.openai.com`). Hugging Face targets always use `huggingface.co`. |
+| `INTAKE_TAVILY_TIMEOUT_SECONDS`, `INTAKE_JINA_TIMEOUT_SECONDS`, `INTAKE_HF_TIMEOUT_SECONDS`, `INTAKE_ASSESSMENT_TIMEOUT_SECONDS`, `INTAKE_RAG_TIMEOUT_SECONDS` | Optional request timeouts in seconds |
+
+Jina Reader and the Hugging Face Hub are used through their public endpoints and need no key.
+
+## How to run
+
+The trigger is one command or one button. After it, the graph runs to the finished report without human steps.
+
+**Command line** (the entry point is `src/intake/cli.py`, run as `python -m intake`):
+
+```bash
+# Offline preview with fixture data, no API calls
+python -m intake run --model Qwen/Qwen3-8B
+
+# Live analysis of an open-weights model on Hugging Face
+python -m intake run --live --model Qwen/Qwen3-8B
+
+# Live analysis of a hosted model
+python -m intake run --live --provider openai --model gpt-5.2-2025-12-11
+```
+
+The report is printed to standard output as Markdown. To save it on Windows: `cmd /d /c "python -X utf8 -m intake run --live --model Qwen/Qwen3-8B > qwen.md"`. Exit code `0` means a report without workflow errors, `2` an input or workflow error (a partial report may still be printed).
+
+**Web interface:**
+
+```bash
+python -m streamlit run app.py
+```
+
+Open `http://localhost:8501`. **Saved reports** shows the two sample reports with no API calls. **Run a new analysis** starts the same graph, draws it live in the **Pipeline view** and shows the report with a dashboard. The [User guide](USER_GUIDE.md) explains every control.
+
+**Tests and checks:**
+
+```bash
+python -m pip install pytest
+python -m pytest -q                                              # offline and mocked tests, no API calls
+python -m intake stability --live --model Qwen/Qwen3-8B -n 5     # same live analysis 5 times, compare statuses
+```
+
+## Architecture
+
+```mermaid
+flowchart LR
+    T([CLI or Run button]) --> V[Validate target<br/>check ID, pick route]
+    V -- invalid input --> R
+    V --> C[Load checklist<br/>18 items]
+    C --> S[Collect sources<br/>Tavily, Jina Reader, HF Hub]
+    C --> G[Regulatory context<br/>embeddings + Pinecone]
+    S --> A[Assess evidence<br/>gpt-5.4-mini + verification]
+    G --> A
+    A --> R[Render report<br/>Markdown brief]
+    R --> O([Report])
+```
+
+1. **Validate target.** Checks the input and picks the route: a Hugging Face `ORG/MODEL` ID or a hosted provider with an exact model ID. Invalid input goes straight to the renderer, which reports the error.
+2. **Load checklist.** Reads the 18 items from `model-intake-checklist.md`: 15 core checks and 3 training-resource checks kept as context.
+3. **Collect sources** and **Regulatory context** run in parallel. Collection runs two Tavily searches (restricted to the provider's domains) and, for Hugging Face models, the Hub API, then reads the top candidate pages with Jina Reader. Retrieval embeds one query per checklist item and fetches the closest passages from Pinecone.
+4. **Assess evidence** starts when both branches are done. The model proposes a status, a source and a short quote for each item, using the regulatory passages for the provisions that item cites to interpret the criterion. Python then verifies every quote against the extracted page text, flags evidence about a different model or variant, and checks that cited links answer.
+5. **Render report.** Python assembles the brief, the provider questions and the regulatory context.
+
+LangGraph state carries the target, the checklist, every tool outcome, the regulatory passages and the findings from node to node. Independent calls inside a node also run in parallel (searches, page reads, Pinecone queries, link checks), with results kept in a fixed order so the report does not depend on timing.
+
+## Tools and models
+
+| Tool or model | Role |
+|---|---|
+| Tavily Search | Finds candidate documentation pages on approved domains |
+| Jina Reader | Extracts text from model cards, docs, trust pages and PDFs |
+| Hugging Face Hub API | Repository metadata for open-weights models |
+| Link check (HTTP) | Confirms that every cited link answers, and that redirects stay on approved domains |
+| OpenAI `gpt-5.4-mini` (Responses API, structured output, 4,000 output-token cap) | Proposes a status, source and quote per checklist item |
+| OpenAI `text-embedding-3-small` | Embeds the regulatory corpus and the per-item queries |
+| Pinecone | Vector store for the regulatory corpus |
+
+## Grounding (RAG)
+
+The regulatory corpus holds 13 verified passages: EU AI Act Article 53 and Annexes XI and XII (Regulation (EU) 2024/1689), and the GPAI Code of Practice Transparency chapter, measures 1.1 and 1.2. The passages tell the assessment what each checklist item means. They can never count as evidence about the model: only provider sources can support a finding, and every quote has to be found in the text of the source it cites.
+
+## The report
+
+Delivered as Markdown: printed by the CLI, and downloadable from the web interface.
+
+1. **Header**: exact model, provider, hosting platform, run date, checklist version, the legal notice and token usage.
+2. **Summary**: a one-line headline, counts by status and the major gaps.
+3. **Source collection**: every tool call and its outcome, including failures.
+4. **Findings**: one block per checklist item with status, quote, source link, model applicability, link check and the gap explanation.
+5. **Prioritised provider questions**: one question per open gap.
+6. **Methods and limitations**.
+7. **Regulatory context**: the retrieved provisions per item.
+
+Statuses: **Evidence found** (meets the criterion and applies to this model), **Partial**, **Not found** (no supporting evidence in this run, which is not proof that it does not exist) and **Not checked** (a tool failed or offline mode).
 
 ## File map
-- `src/intake/cli.py`: command-line entry point and report output.
-- `src/intake/graph.py`: LangGraph state machine, source routing, and the pipeline events the nodes emit.
-- `src/intake/runner.py`: `iter_run()` streams a run as events and returns the same final state as `invoke()`.
-- `src/intake/pipeline_view.py`: graph topology, per-run state reducer, and HTML for the Pipeline view.
-- `assets/pipeline.css`: styles for the Pipeline view.
-- `src/intake/adapters.py`: Tavily, Jina, and Hugging Face adapters.
-- `src/intake/assessment.py`: OpenAI assessment, validation, and Markdown rendering.
-- `src/intake/regulatory.py`: corpus loading, indexing, and retrieval helpers.
-- `app.py`: Streamlit page for previewing saved reports and running the graph.
-- `samples/qwen3-8b.md`: saved live Qwen report.
-- `samples/gpt-5.2.md`: saved live hosted-model report.
-- `tests/`: regression coverage for offline, live-mocked, and UI helpers.
 
-## Saved reports
-- [Qwen/Qwen3-8B sample](samples/qwen3-8b.md)
-- [GPT-5.2 sample](samples/gpt-5.2.md)
+| Path | Purpose |
+|---|---|
+| `src/intake/cli.py`, `src/intake/__main__.py` | Command-line entry point (`python -m intake`) |
+| `src/intake/graph.py` | LangGraph state, nodes, edges, parallel branches and pipeline events |
+| `src/intake/adapters.py` | Tavily, Jina Reader and Hugging Face Hub adapters |
+| `src/intake/assessment.py` | OpenAI assessment, quote verification, link checks, Markdown rendering |
+| `src/intake/regulatory.py` | Regulatory corpus, Pinecone indexing and retrieval |
+| `src/intake/checklist.py`, `model-intake-checklist.md` | The 18-item checklist and its loader |
+| `src/intake/settings.py` | Reads `.env` for live runs |
+| `src/intake/fixtures.py` | Fixture data for the offline preview |
+| `src/intake/runner.py` | Streams a run as events for the web interface |
+| `src/intake/pipeline_view.py`, `assets/pipeline.css` | Live diagram of the graph (Pipeline view) |
+| `src/intake/report_review.py`, `src/intake/dashboard.py`, `assets/dashboard.css` | Report parsing and the report overview dashboard |
+| `src/intake/stability.py` | Repeated runs and status comparison (`python -m intake stability`) |
+| `app.py`, `assets/`, `.streamlit/config.toml` | Streamlit web interface and its theme |
+| `samples/` | Two reports generated by the system |
+| `tests/` | Offline, mocked-live and interface tests |
+| `USER_GUIDE.md` | How to use the interface and the CLI, and how to read the report |
+| `stack_decision.md`, `gtm_future_sprints.md` | Stack rationale and future GTM sprints |
+| `model-intake-day1.md` | Day 1 plan: user, scope, workflow draft and report template |
+| `stability.md` | Result of a 5-run stability check on Qwen/Qwen3-8B |
+| `.env.example` | Names of the environment variables, no secrets |
 
-## Current behavior
-- Offline mode does not read `.env` and keeps the deterministic fixture draft.
-- The Streamlit page loads saved reports without calling the graph until the user clicks `Run graph`.
-- Live mode reads `.env` only for the configured API keys, timeout values, provider domain allowlist, embeddings key, assessment timeout, and Pinecone configuration.
-- Live research drafts use Tavily Search, Jina Reader, and Hugging Face Hub for Hugging Face IDs, and skip Hugging Face for hosted provider IDs.
-- The Day 3 report uses `gpt-5.4-mini` for structured evidence assessment, keeps model-provider attribution separate from the hosting platform, writes the final Markdown to stdout, and renders `## Full report` for a successful live run while preserving partial and offline labels when needed.
-- The hosted GPT-5.2 demo target also seeds the provider-published training-content summary at `https://cdn.openai.com/pdf/gpt-5-2-eu-ai-act-public-summary-of-training-content.pdf` as a preferred Jina candidate source, while keeping the official model documentation and redirect allowlist in place.
-- The regulatory corpus includes verified AI Act passages and verified GPAI Code transparency measures 1.1 and 1.2, extracted from the readable mirror when the official PDF could not be read directly in this environment.
-- The report overview is computed by `src/intake/dashboard.py` from the report Markdown (findings, sources, regulatory section), so it is the same for a fresh run and a saved report. The trust tiles are derived values, not new data: quotes found in source text, link-check outcomes from the `Link check` lines, provider-domain match by host name (a heuristic).
+## Known limits
+
+- **Status variance.** The assessment is an LLM call, so the line between *partial* and *not found* can move between runs on the same sources. `python -m intake stability` measures it; `stability.md` shows a 5-run check made before the latest assessment change.
+- **One research pass.** The graph searches once per run. A follow-up search loop for items still *not found* is planned, not built.
+- **Public sources only.** Gated pages, rate limits and documents published for a different model version can lead to *partial* or *not found*.
