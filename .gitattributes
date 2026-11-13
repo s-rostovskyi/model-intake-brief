@@ -1,0 +1,8 @@
+# Store text with LF in the repository; Git converts to the platform line ending on checkout.
+* text=auto
+
+# Binary assets: never convert
+*.png binary
+*.webp binary
+*.jpg binary
+*.ico binary

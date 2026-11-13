@@ -56,12 +56,19 @@
 /* ---- 4. Hero (art untouched; text tokens + edge only) -------------------- */
 
 .stApp .intake-hero {
-  --hero-accent: var(--mib-hero-kicker);
-  border: 1px solid var(--mib-border-subtle);
+  border: 1px solid light-dark(#d4dcdd, #3a4245);
   border-radius: var(--mib-radius-hero);
 }
 
 /* ---- 5. Report overview card + KPI tiles -------------------------------- */
+
+.stApp .st-key-intake-run-panel {
+  background-color: var(--mib-run-panel);
+  background-image: radial-gradient(circle, var(--mib-run-panel-grain) .7px, transparent .9px);
+  background-size: 5px 5px;
+  border-color: var(--mib-run-panel-border);
+  border-radius: var(--mib-radius-card);
+}
 
 .stApp .st-key-intake-overview {
   background: var(--mib-surface-1) !important;
@@ -183,9 +190,13 @@
   background: var(--mib-info-container) !important;
   border-radius: var(--mib-radius-card) !important;
 }
-.stApp .intake-wait { background: var(--mib-wait-bg); border-radius: var(--mib-radius-card); color: var(--mib-wait-text); }
+.stApp .intake-wait {
+  background-color: var(--mib-wait-bg);
+  border: 1px solid var(--mib-wait-border);
+  border-radius: var(--mib-radius-card);
+  color: var(--mib-wait-text);
+}
 .stApp .intake-wait span { color: var(--mib-wait-text-2); }
-.stApp .intake-reels i { background: var(--mib-wait-accent); }
 
 /* ---- 11b. Leftovers found on "Run a new analysis" ------------------------ */
 

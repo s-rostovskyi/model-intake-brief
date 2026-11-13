@@ -99,6 +99,9 @@
   --mib-surface-1: light-dark(#f1f4f5, #1c2022);
   --mib-surface-2: light-dark(#ffffff, #262b2c);
   --mib-surface-3: light-dark(#ebeef0, #101415);
+  --mib-run-panel: light-dark(#eef2f2, #202527);
+  --mib-run-panel-border: light-dark(#d4dcdd, #3a4245);
+  --mib-run-panel-grain: light-dark(rgb(40 52 54 / .06), rgb(220 228 230 / .045));
   --mib-surface-overlay: light-dark(#ffffff, #2d3132);
   --mib-text: light-dark(#181c1e, #eef1f3);
   --mib-text-2: light-dark(#556063, #a2adb0);
@@ -122,10 +125,12 @@
   --mib-on-info-container: light-dark(#001d34, #cfe5ff);
   --mib-code-text: light-dark(#1e511e, #9cd593);
   --mib-hero-kicker: light-dark(#005141, #86d6bd);
-  --mib-wait-bg: light-dark(#00382c, #00382c);
-  --mib-wait-text: light-dark(#b9ffe8, #b9ffe8);
-  --mib-wait-text-2: light-dark(#a2f2d9, #a2f2d9);
-  --mib-wait-accent: light-dark(#86d6bd, #86d6bd);
+  --mib-wait-bg: light-dark(#eef2f2, #202527);
+  --mib-wait-border: light-dark(#d4dcdd, #3a4245);
+  --mib-wait-text: var(--mib-text);
+  --mib-wait-text-2: light-dark(#454c4e, #bfc7c9);
+  --mib-wait-track: light-dark(#d3dada, #454d50);
+  --mib-wait-accent: var(--mib-primary);
 
   /* --- data-visualisation (no charts in the app today; ready for use) --- */
   --mib-viz-cat-1: light-dark(#005640, #52e8cc);

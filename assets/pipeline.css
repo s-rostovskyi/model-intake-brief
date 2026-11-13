@@ -121,8 +121,8 @@
 .pv-legend [data-state="running"]::before { border-color: var(--pv-run); }
 .pv-legend [data-state="error"]::before { border-color: var(--pv-err); }
 .pv-legend [data-state="skipped"]::before { border-style: dashed; opacity: .6; }
-.pv-legend .pv-parallel::before { content: "‖"; border: 0; width: auto; height: auto; margin-right: .3rem; font-weight: 700; color: var(--pv-run); }
 .pv-legend .pv-dash::before { border: 0; border-top: 2px dashed var(--mib-border-control); border-radius: 0; width: 1.1rem; height: 0; }
+.pv-legend .pv-parallel::before { content: "‖"; border: 0; width: auto; height: auto; margin-right: .3rem; font-weight: 700; color: var(--pv-run); }
 
 @keyframes pv-pulse { 50% { box-shadow: 0 0 0 7px color-mix(in srgb, var(--pv-run) 10%, transparent); } }
 @keyframes pv-flow { to { background-position: 13px 0; } }

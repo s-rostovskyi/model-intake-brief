@@ -25,7 +25,7 @@ def run_cli(argv: list[str]) -> tuple[int, str, str]:
 
 
 def _fake_assessment(positive_item: str, source_url: str, source_name: str = 'Jina Reader', expected_timeout_seconds: float | None = None):
-    def fake_assessment(api_key, checklist_items, target, source_outcomes, timeout_seconds):
+    def fake_assessment(api_key, checklist_items, target, source_outcomes, timeout_seconds, *, regulatory_context=None):
         if expected_timeout_seconds is not None:
             assert float(timeout_seconds) == float(expected_timeout_seconds)
         source_records = []
@@ -264,7 +264,7 @@ def test_live_assessment_timeout_preserves_partial_report(monkeypatch):
             full_text='OpenAI reader text with integration instructions.',
         )
 
-    def fake_timeout_assessment(api_key, checklist_items, target, source_outcomes, timeout_seconds):
+    def fake_timeout_assessment(api_key, checklist_items, target, source_outcomes, timeout_seconds, *, regulatory_context=None):
         assert float(timeout_seconds) == 33.0
         raise AssessmentFailure('timeout', 'OpenAI assessment request timed out after 33 seconds.')
 
@@ -397,7 +397,7 @@ def test_live_hosted_gpt52_prefers_configured_summary_source(monkeypatch):
             )
         return result
 
-    def fake_assessment(api_key, checklist_items, target, source_outcomes, timeout_seconds):
+    def fake_assessment(api_key, checklist_items, target, source_outcomes, timeout_seconds, *, regulatory_context=None):
         assert float(timeout_seconds) == 42.0
         summary_source_id = None
         for index, outcome in enumerate(source_outcomes):
@@ -565,7 +565,9 @@ def test_check_public_url_blocks_redirects_outside_allowlist(monkeypatch):
 
 
 def test_call_openai_assessment_uses_output_cap(monkeypatch):
-    checklist_item = load_checklist()[0]
+    checklist = load_checklist()
+    checklist_item, second_item = checklist[0], checklist[1]            # ID-01, ID-02: no Annex XII 1(h)
+    licence_item = next(item for item in checklist if item.item_id == 'DS-02')   # cites Annex XII 1(h)
     captured_request = {}
 
     class FakeResponse:
@@ -588,13 +590,25 @@ def test_call_openai_assessment_uses_output_cap(monkeypatch):
 
     monkeypatch.setattr('intake.assessment.requests.post', fake_post)
 
+    hit = {'chunk_id': 'ai-act-annex-xii-1h', 'provision': 'Annex XII, point 1(h)', 'excerpt': 'Licence information'}
+    items = [checklist_item, second_item, licence_item]
     raw_output, usage = call_openai_assessment(
         'oa-test',
-        [checklist_item],
+        items,
         {'provider': 'openai', 'normalized_provider': 'openai', 'exact_model_id': 'gpt-5.2-2025-12-11', 'target_kind': 'hosted'},
         [],
         timeout_seconds=17,
+        regulatory_context={item.item_id: {'hits': [hit]} for item in items},
     )
+
+    import json
+    prompt = json.loads(captured_request['json']['input'])
+    # the same similarity hit reaches all three items, but only DS-02 cites that provision
+    assert prompt['regulatory_context'] == {
+        'passages': {'ai-act-annex-xii-1h': {'provision': 'Annex XII, point 1(h)', 'excerpt': 'Licence information'}},
+        'by_item': {'DS-02': ['ai-act-annex-xii-1h']},
+    }
+    assert prompt['source_catalog'] == []
 
     assert captured_request['url'] == 'https://api.openai.com/v1/responses'
     assert captured_request['json']['max_output_tokens'] == ASSESSMENT_TOKENS
@@ -604,6 +618,17 @@ def test_call_openai_assessment_uses_output_cap(monkeypatch):
     assert 'provider_evidence' not in captured_request['json']['input']
     assert usage == {'input_tokens': 12, 'output_tokens': 34}
     assert raw_output['findings'][0]['item_id'] == checklist_item.item_id
+
+
+def test_provision_keys_match_checklist_references_to_corpus_provisions():
+    from intake.assessment import _provision_key, _reference_keys
+
+    assert _provision_key('Annex XII, point 1(h)') == _provision_key('Annex XII §1(h)') == ('annex xii', '1(h)')
+    assert _provision_key('Annex XI, Section 1, point 2(e)') == _provision_key('Annex XI §1(2)(e)')
+    assert _provision_key('Article 53(1)(d) support') == ('article', '53(1)(d)')
+    assert _provision_key('Transparency chapter, Measure 1.2') is None
+    assert _reference_keys('Form, General information') == set()
+    assert _reference_keys('Article 53(1)(d), separate AI Office template') == {('article', '53(1)(d)')}
 
 
 def test_call_openai_assessment_reports_incomplete_response(monkeypatch):

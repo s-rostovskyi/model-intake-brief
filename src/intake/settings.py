@@ -36,6 +36,15 @@ def _resolve_setting(name: str, env_values: dict[str, str], default: str | None 
     return value
 
 
+def _timeout_seconds(name: str, env_values: dict[str, str], default: str) -> float:
+    try:
+        return float(_resolve_setting(name, env_values, default) or default)
+    except ValueError:
+        raise ValueError(
+            f"Invalid live-run setting {name}. Set it to a number of seconds (for example, {default}), then try again."
+        ) from None
+
+
 def load_live_settings() -> LiveSettings:
     import os
 
@@ -52,9 +61,9 @@ def load_live_settings() -> LiveSettings:
     return LiveSettings(
         tavily_api_key=tavily_api_key,
         provider_domains=provider_domains,
-        tavily_timeout_seconds=float(_resolve_setting('INTAKE_TAVILY_TIMEOUT_SECONDS', merged, '15') or '15'),
-        jina_timeout_seconds=float(_resolve_setting('INTAKE_JINA_TIMEOUT_SECONDS', merged, '15') or '15'),
-        hf_timeout_seconds=float(_resolve_setting('INTAKE_HF_TIMEOUT_SECONDS', merged, '15') or '15'),
-        assessment_timeout_seconds=float(_resolve_setting('INTAKE_ASSESSMENT_TIMEOUT_SECONDS', merged, '90') or '90'),
-        rag_timeout_seconds=float(_resolve_setting('INTAKE_RAG_TIMEOUT_SECONDS', merged, '15') or '15'),
+        tavily_timeout_seconds=_timeout_seconds('INTAKE_TAVILY_TIMEOUT_SECONDS', merged, '15'),
+        jina_timeout_seconds=_timeout_seconds('INTAKE_JINA_TIMEOUT_SECONDS', merged, '15'),
+        hf_timeout_seconds=_timeout_seconds('INTAKE_HF_TIMEOUT_SECONDS', merged, '15'),
+        assessment_timeout_seconds=_timeout_seconds('INTAKE_ASSESSMENT_TIMEOUT_SECONDS', merged, '90'),
+        rag_timeout_seconds=_timeout_seconds('INTAKE_RAG_TIMEOUT_SECONDS', merged, '15'),
     )

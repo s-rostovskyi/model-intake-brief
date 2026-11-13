@@ -34,7 +34,7 @@ Viewing, switching, and downloading saved reports requires no application API ca
 |---|---|
 | **Workspace → Saved reports** | Opens one of the two bundled reports. Select a different sample from the **Report** list to switch. Select a status in **Evidence coverage** to open the matching findings. |
 | **Workspace → Run a new analysis** | Opens the analysis form and shows the most recent result from this browser session, if one exists. |
-| **User guide** | Opens the reviewer guide in the app. Use **Download full user guide** for the setup and CLI instructions. |
+| **User guide** | Opens the reviewer guide at the bottom of either workspace. Use **Download full user guide** for the setup and CLI instructions. |
 | **Main menu (⋮) → System, Light or Dark** | Selects the light or dark appearance. The header palette follows the theme. |
 
 ### Analysis form
@@ -48,7 +48,7 @@ Viewing, switching, and downloading saved reports requires no application API ca
 | **Recent models** | Reuses a previously submitted model for the current input format. The app keeps up to five entries in this session. |
 | **Live run** | Off by default. With it off, the graph renders a deterministic offline preview. Turn it on to search public sources and assess the model using configured external services. A live run can consume service credits. |
 | **Demo pace** | Offline only, on by default. Holds each pipeline step on screen for a moment so the run can be followed. The run time in the report ignores these pauses. Turn it off to see the real speed. |
-| **Run offline preview** or **Run live analysis** | Submits the form. Changing an input or switching workspace modes does not submit it. |
+| **Run offline preview** or **Run live analysis** | Starts the analysis. Typing in a field or switching workspace modes does not start a run. While a run is in progress, the form and the workspace switch are locked, because changing them would stop the run. |
 
 **Offline preview** is a way to check the form, report layout, and Markdown download. The report is labelled **Offline demo — fixture data**, and the overview says the run was not assessed instead of showing evidence coverage.
 
@@ -66,7 +66,7 @@ Under the form, **Pipeline view** shows the workflow as a diagram that is drawn 
 | Moving arrow | Data is handed from the finished stage to the next one. |
 | **‖** and the **parallel** arcs | **Collect sources** and **Regulatory context** run at the same time. Both start after the checklist is loaded, and **Assess evidence** waits for both. Both cards are blue while they run. Searches and page reads inside **Collect sources** also overlap. |
 | **Parallel branches saved** | Shown after a run when the overlap saved at least half a second: the sum of the time each stage ran minus the real run time. |
-| Dashed arc, **on error** | If validation fails, the run skips the remaining stages and goes straight to the renderer, which reports the error. The arc turns solid red when that route is taken. If source collection fails, **Assess evidence** is shown as skipped and the renderer reports the error. |
+| Red arc, **on error** | Appears when target validation fails and the graph goes directly to the renderer to report the error. If source collection fails, its node is marked failed, **Assess evidence** is skipped, and the renderer reports the error on the existing route. |
 | **Replay last run** | Redraws the recorded events of the latest run with no API calls. Replay shows the same steps, with long waits shortened. |
 
 In offline mode with **Demo pace**, parallel stages are drawn running together even though the offline data finishes instantly. The view is a picture of one run. It does not change the result, and the CLI works without it.
@@ -106,7 +106,7 @@ Enter an identifier in **Model**, not a documentation URL. A similar model name,
 1. **Identify the target.** The workflow validates the input format, resolves the route, and loads the fixed checklist.
 2. **Collect public sources.** Tavily Search discovers candidates. Jina Reader extracts text from eligible public pages or PDFs. The Hugging Face route also calls the Hub API for repository metadata. Search snippets help locate sources.
 3. **Retrieve regulatory context.** This runs at the same time as step 2, because it only needs the checklist. OpenAI's `text-embedding-3-small` represents search queries as vectors. Pinecone uses them to retrieve relevant passages from the indexed corpus. The corpus contains selected EU AI Act Article 53 and Annex XI/XII passages and the GPAI Code of Practice Transparency chapter.
-4. **Assess and verify.** Starts when steps 2 and 3 have both finished. The assessment model proposes a status and supporting evidence for each item. The workflow checks excerpts against retrieved source material, checks whether the evidence applies to the target, and records public link-check outcomes for selected URLs.
+4. **Assess and verify.** Starts when steps 2 and 3 have both finished. The assessment model uses the retrieved passages to interpret the associated checklist criteria. Only passages for a provision that the checklist item itself cites are passed on. Items whose provisions are not in the corpus are assessed as written. It uses public model documentation to propose a status and supporting evidence for each item. The workflow checks excerpts against retrieved source material, checks whether the evidence applies to the target, and records public link-check outcomes for selected URLs.
 5. **Render the brief.** Python assembles the Markdown, including gaps and questions for the provider. Regulatory references appear as context for the checks. Findings about the target rely on the provider evidence collected for that run.
 
 Search, extraction, and link checks run within request limits. Gated pages, rate limits, incomplete extraction, and documents published under a different version can affect the result. A link check establishes the reported outcome of accessing a URL at run time. Read the excerpt and its surrounding context to judge what it supports.

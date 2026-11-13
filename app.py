@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import base64
+import os
 import re
 from collections import Counter
 from html import escape
@@ -298,9 +299,14 @@ def _render_report(report: str, filename: str, mode: str, elapsed: float | None 
 
 
 def _render_brand() -> None:
-    artwork = base64.b64encode((ROOT / 'assets' / 'intake-hero-topography.webp').read_bytes()).decode('ascii')
     assets = ROOT / 'assets'
-    base_css = (assets / 'intake-ui.css').read_text(encoding='utf-8').replace('__HERO_ARTWORK__', artwork)
+
+    def embedded(name: str) -> str:
+        return base64.b64encode((assets / name).read_bytes()).decode('ascii')
+
+    base_css = ((assets / 'intake-ui.css').read_text(encoding='utf-8')
+                .replace('__HERO_INK__', embedded('intake-hero-fingerprint.svg'))
+                .replace('__HERO_RIDGE__', embedded('intake-hero-fingerprint-ridge.svg')))
     theme_css = '\n'.join(
         (assets / filename).read_text(encoding='utf-8')
         for filename in ('tokens.css', 'theme-layer.css', 'pipeline.css', 'dashboard.css')
@@ -321,6 +327,38 @@ def _fill_model(provider: str, model: str, hosted: bool) -> None:
         st.session_state['provider'] = provider
 
 
+def _target_error(hosted: bool, provider: str | None, model: str | None, example: str) -> str | None:
+    provider, model = (provider or '').strip(), (model or '').strip()
+    if hosted and not provider:
+        return 'Enter a provider name, for example openai.'
+    if hosted and not re.fullmatch(r'[A-Za-z][A-Za-z0-9._ -]*', provider):
+        return 'Enter a provider name starting with a letter, for example openai.'
+    if not model:
+        return f'Enter a model ID, for example {example}.'
+    if hosted and not re.fullmatch(r'(?!.*://)\S+', model):
+        return 'Enter the exact model ID without a URL or spaces.'
+    if not hosted and not re.fullmatch(r'[^/\s]+/[^/\s]+', model):
+        return 'Use ORG/MODEL, for example Qwen/Qwen3-8B.'
+    if hosted and model.isdigit():
+        return f'Enter the exact model ID from the provider documentation, for example {example}.'
+    return None
+
+
+def _request_run(hosted: bool, example: str) -> None:
+    """Button callback. It runs before the page is redrawn, so the form can be drawn locked for the run."""
+    state = st.session_state
+    error = _target_error(hosted, state.get('provider') if hosted else None,
+                          state.get('hosted-model' if hosted else 'hf-model'), example)
+    if error:
+        state['run-error'] = error
+    else:
+        state['run-pending'] = 'run'
+
+
+def _request_demo_error() -> None:
+    st.session_state['run-pending'] = 'demo'
+
+
 def _render_help() -> None:
     guide = (ROOT / 'USER_GUIDE.md').read_text(encoding='utf-8-sig')
     reviewer = guide.split('## Reviewer guide', 1)[-1].split('## Setup and CLI', 1)[0]
@@ -334,95 +372,123 @@ def main() -> None:
     st.set_page_config(page_title='Model Intake Brief', layout='wide')
     _render_brand()
     st.caption('Information, not legal advice.')
-    _render_help()
+    # any widget change restarts the script and would cut a running analysis short, so lock them while it runs
+    busy = st.session_state.get('run-pending') is not None
     mode = st.radio('Workspace', ['Saved reports', 'Run a new analysis'], horizontal=True,
-                    key='workspace', bind='query-params')
+                    key='workspace', bind='query-params', disabled=busy)
     if mode == 'Saved reports':
         sample_key = st.selectbox('Report', sample_keys(), key='report', bind='query-params')
         st.set_page_config(page_title=f'{sample_key} · Model Intake Brief')
         st.caption('These reports were generated with live sources. Viewing them uses no API credits.')
         _render_report(load_saved_report(sample_key), sample_path(sample_key).name, 'Saved live report')
-        return
-
-    st.set_page_config(page_title='New analysis · Model Intake Brief')
-    target_mode = st.radio('Model input format', ['Hugging Face ORG/MODEL', 'Hosted provider + exact model ID'],
-                           key='target-format', persist_state='session')
-    hosted = target_mode == 'Hosted provider + exact model ID'
-    example = 'gpt-5.2-2025-12-11' if hosted else 'Qwen/Qwen3-8B'
-    st.button('Use example', on_click=_fill_model, args=('openai', example, hosted))
-    recent = [row for row in st.session_state.get('recent_models', []) if row[2] == hosted]
-    if recent:
-        with st.popover('Recent models'):
-            for index, (recent_provider, recent_model, recent_hosted) in enumerate(recent):
-                st.button(recent_model, key=f'recent-{index}', on_click=_fill_model,
-                          args=(recent_provider, recent_model, recent_hosted))
-    live_mode = st.checkbox('Live run', value=False, key='live-mode', persist_state='session')
-    if live_mode:
-        st.warning('Uses search, extraction and OpenAI calls. May consume credits.')
     else:
-        st.caption('Offline preview uses fixture data and makes no external API calls.')
-        st.checkbox('Demo pace', value=True, key='demo-pace', persist_state='session',
-                    help='Offline runs finish in milliseconds. Demo pace holds each pipeline step on screen '
-                         'so you can follow it. The run time shown in the report ignores these pauses.')
-    with st.form('run-form'):
-        provider = st.text_input('Provider', placeholder='openai', key='provider',
-                                 persist_state='session', required=True) if hosted else None
-        if hosted:
-            st.caption('Enter the provider name used in its documentation.')
-        validation = (
-            (r'(?!.*://)\S+', 'Enter the exact model ID without a URL or spaces.')
-            if hosted else (r'[^/\s]+/[^/\s]+', 'Use ORG/MODEL, for example Qwen/Qwen3-8B.')
-        )
-        model = st.text_input('Model', placeholder=example, key='hosted-model' if hosted else 'hf-model',
-                              persist_state='session', required=True, validate=validation)
-        st.caption('Exact model ID from provider documentation. Enter the ID without a URL.' if hosted else
-                   'Repository ID in ORG/MODEL format. Enter the ID without a URL.')
-        field_error = st.empty()
-        submitted = st.form_submit_button('Run live analysis' if live_mode else 'Run offline preview',
-                                          type='primary', icon=':material/play_arrow:')
+        _render_analysis()
+    st.divider()
+    _render_help()
+
+
+def _render_analysis() -> None:
+    st.set_page_config(page_title='New analysis · Model Intake Brief')
+    # set by the Run button callback; read once, so a stopped or failed run can never leave the form locked
+    pending = st.session_state.pop('run-pending', None)
+    busy = pending is not None
+    with st.container(border=True, key='intake-run-panel'):
+        target_column, run_column = st.columns([2, 1], gap='medium')
+        with target_column:
+            target_mode = st.radio(
+                'Model input format', ['Hugging Face ORG/MODEL', 'Hosted provider + exact model ID'],
+                key='target-format', horizontal=True, persist_state='session', disabled=busy,
+            )
+            hosted = target_mode == 'Hosted provider + exact model ID'
+            example = 'gpt-5.2-2025-12-11' if hosted else 'Qwen/Qwen3-8B'
+            provider = None
+            if hosted:
+                provider_column, model_column = st.columns([1, 2])
+                with provider_column:
+                    provider = st.text_input('Provider', placeholder='openai', key='provider',
+                                             persist_state='session', disabled=busy)
+            else:
+                model_column = target_column
+            with model_column:
+                model = st.text_input('Model', placeholder=example, key='hosted-model' if hosted else 'hf-model',
+                                      persist_state='session', disabled=busy)
+            st.caption('Enter the exact model ID from the provider documentation, without a URL.' if hosted else
+                       'Repository ID in ORG/MODEL format. Enter the ID without a URL.')
+            field_error = st.empty()
+            if (error := st.session_state.pop('run-error', None)):
+                field_error.error(f'Analysis not started. {error}')
+            recent = [row for row in st.session_state.get('recent_models', []) if row[2] == hosted]
+            with st.container(horizontal=True, gap='small'):
+                st.button('Use example', on_click=_fill_model, args=('openai', example, hosted), disabled=busy)
+                if recent:
+                    with st.popover('Recent models', disabled=busy):
+                        for index, (recent_provider, recent_model, recent_hosted) in enumerate(recent):
+                            st.button(recent_model, key=f'recent-{index}', on_click=_fill_model,
+                                      args=(recent_provider, recent_model, recent_hosted))
+        with run_column:
+            st.markdown('**Run mode**')
+            live_mode = st.checkbox('Live run', value=False, key='live-mode', persist_state='session', disabled=busy)
+            if live_mode:
+                st.warning('Uses search, extraction and OpenAI calls. May consume credits.')
+            else:
+                st.caption('Offline preview uses fixture data and makes no external API calls.')
+                st.checkbox('Demo pace', value=True, key='demo-pace', persist_state='session', disabled=busy,
+                            help='Slows down the display so you can follow the pipeline. '
+                                 'The reported run time excludes these pauses.')
+            st.button('Analysis running…' if busy else 'Run live analysis' if live_mode else 'Run offline preview',
+                      type='primary', icon=':material/play_arrow:', key='run-analysis', disabled=busy,
+                      on_click=_request_run, args=(hosted, example))
+            if os.getenv('INTAKE_DEMO_VALIDATION_ERROR') == '1':
+                st.button('Demo: validation error', key='demo-validation-error', disabled=busy,
+                          on_click=_request_demo_error)
+    submitted, demo_error = pending == 'run', pending == 'demo'
+
+    if submitted:
+        entry = ((provider or '').strip(), model.strip(), hosted)
+        st.session_state['recent_models'] = [entry, *[r for r in st.session_state.get('recent_models', [])
+                                                   if r != entry]][:5]
+
     topo = pv.topology()
     trace = st.session_state.get('last_trace')
     with st.expander('Pipeline view: how the data moves through the graph', expanded=True,
                      icon=':material/account_tree:'):
+        previous = st.session_state.get('last_analysis')
+        if trace and previous and not (submitted or demo_error):
+            _, previous_live, previous_model, _ = previous
+            mode_label = 'live analysis' if previous_live else 'offline preview'
+            st.caption(f'Last run: {previous_model} ({mode_label}).')
         view = st.empty()
         replay_clicked = st.button('Replay last run', icon=':material/replay:', key='replay-run',
-                                   disabled=trace is None, help='Redraws the recorded events. Makes no API calls.')
+                                   disabled=trace is None or busy)
     if replay_clicked and trace:
         _animate(view, topo, trace['events'], note=REPLAY_NOTE, paced=trace['paced'])
     else:
         view.html(pv.render_html(pv.replay(topo, trace['events'], trace['note']) if trace else pv.PipelineRun(topo)))
 
-    if submitted:
-        if hosted and not (provider or '').strip():
-            field_error.error('Enter a provider name, for example openai.')
-            return
-        if not (model or '').strip():
-            field_error.error(f'Enter a model ID, for example {example}.')
-            return
-        if not hosted and not re.fullmatch(r'[^/\s]+/[^/\s]+', model.strip()):
-            field_error.error('Use ORG/MODEL, for example Qwen/Qwen3-8B. For hosted models, switch the input format.')
-            return
-        if hosted and not re.fullmatch(validation[0], model.strip()):
-            field_error.error(validation[1])
-            return
-        entry = ((provider or '').strip(), model.strip(), hosted)
-        st.session_state['recent_models'] = [entry, *[r for r in st.session_state.get('recent_models', [])
-                                                   if r != entry]][:5]
-
-        paced = (not live_mode) and bool(st.session_state.get('demo-pace', True))
+    if submitted or demo_error:
+        if demo_error:
+            live_mode, provider, model = False, None, 'not-a-valid-id'
+        paced = demo_error or (not live_mode and bool(st.session_state.get('demo-pace', True)))
         note = PACE_NOTE if paced else ''
         payload = build_run_payload(live_mode, provider, model)
         waiting = st.empty()
-        if live_mode:
-            waiting.html('''
-                <div class="intake-wait" role="status">
-                    <div class="intake-reels" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
-                    <div><strong>Analysis in progress</strong><br>
-                    <span>Evidence counts will appear when the report is ready.</span></div>
-                </div>
-            ''')
         start, paused = perf_counter(), 0.0
         run, events, result = pv.PipelineRun(topo, note), [], None
+
+        def show_progress():
+            completed = sum(node.status in ('done', 'skipped', 'error') for node in run.nodes.values())
+            waiting.html(f'''
+                <div class="intake-wait">
+                    <div role="status"><strong>Analysis in progress</strong><br>
+                    <span>Evidence counts will appear when the report is ready.</span></div>
+                    <progress aria-label="Analysis pipeline progress"
+                              aria-valuetext="{completed} of {len(run.nodes)} steps processed"
+                              value="{completed}" max="{len(run.nodes)}"></progress>
+                </div>
+            ''')
+
+        if live_mode:
+            show_progress()
         view.html(pv.render_html(run))
         gate = pv.LayerGate(topo) if paced else None
 
@@ -430,6 +496,8 @@ def main() -> None:
             nonlocal paused
             run.apply(event, t)
             view.html(pv.render_html(run))
+            if live_mode and event.get('type') in ('node_started', 'node_finished'):
+                show_progress()
             if paced and PACE.get(event.get('type')):
                 sleep(PACE[event['type']])
                 paused += PACE[event['type']]
@@ -459,9 +527,10 @@ def main() -> None:
         st.info('Your analysis will appear here after you run it.')
         return
     result, was_live, run_model, elapsed = previous
-    if result.get('error'):
-        st.error(result['error'])
     report = result.get('report_markdown')
+    if result.get('error'):
+        title = 'Partial report generated' if report else 'Analysis stopped before a report was generated'
+        st.error(result['error'], title=title)
     if report:
         _render_report(report, _download_name(run_model, was_live),
                        'Live analysis' if was_live else 'Offline preview', elapsed)

@@ -30,6 +30,38 @@ class AssessmentFailure(RuntimeError):
         self.status_code = status_code
 
 
+_PROVISION_PREFIX = re.compile(r'^(annex xii|annex xi|article)\b', re.I)
+
+
+def _provision_key(text: str) -> tuple[str, str] | None:
+    """'Annex XII, point 1(h)' and 'Annex XII §1(h)' both become ('annex xii', '1(h)')."""
+    text = re.sub(r'\s+support$', '', text.strip(), flags=re.I)
+    match = _PROVISION_PREFIX.match(text)
+    if not match:
+        return None
+    kind = match.group(1).lower()
+    rest = text[match.end():].replace('§', ' ').lower()
+    if kind == 'article':
+        return kind, re.sub(r'[\s,]', '', rest)
+    section = re.search(r'section\s+(\d+)', rest)
+    point = re.search(r'(\d+)((?:\(\w+\))*)', re.sub(r'section\s+\d+', '', rest))
+    if not point:
+        return None
+    number, tail = point.groups()
+    # 'Section 1, point 2(e)' and '§1(2)(e)' name the same provision
+    return kind, (f'{section.group(1)}({number}){tail}' if section else f'{number}{tail}')
+
+
+def _reference_keys(reference: str) -> set[tuple[str, str]]:
+    """Legal provisions named in a checklist item's reference, ignoring the Form and template parts."""
+    keys = set()
+    for part in reference.split(','):
+        key = _provision_key(part)
+        if key:
+            keys.add(key)
+    return keys
+
+
 def _truncate(text: str, limit: int = 1200) -> str:
     collapsed = ' '.join(text.split())
     if len(collapsed) <= limit:
@@ -362,14 +394,41 @@ def call_openai_assessment(
     target: dict[str, Any],
     source_outcomes: list[dict[str, Any]],
     timeout_seconds: float,
+    *,
+    regulatory_context: dict[str, Any] | None = None,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     schema = build_assessment_schema(checklist_items)
     source_catalog = _source_catalog(source_outcomes)
+    regulatory_passages = {}
+    regulatory_refs_by_item = {}
+    for item in checklist_items:
+        hits = (regulatory_context or {}).get(item.item_id, {}).get('hits', [])
+        # Only passages for the provisions the checklist item itself cites. A similarity hit for an
+        # unrelated provision (for example a licence passage for the release-date check) is left out.
+        allowed = _reference_keys(getattr(item, 'reference', '') or '')
+        references = []
+        for hit in hits[:3]:
+            chunk_id = hit.get('chunk_id')
+            excerpt = hit.get('excerpt')
+            if not chunk_id or not excerpt or chunk_id in references:
+                continue
+            if _provision_key(str(hit.get('provision') or '')) not in allowed:
+                continue
+            regulatory_passages.setdefault(chunk_id, {
+                'provision': hit.get('provision'),
+                'excerpt': _truncate(excerpt, 400),
+            })
+            references.append(chunk_id)
+        if references:
+            regulatory_refs_by_item[item.item_id] = references
     prompt = {
         'task': 'Assess public evidence for the fixed checklist.',
         'rules': [
             'Use only the provided provider evidence.',
-            'Do not use regulatory context or outside knowledge for provider evidence.',
+            'Use any mapped regulatory passages to interpret the corresponding checklist criterion. '
+            'The fixed checklist controls the scope. Assess the criterion as written if passages are absent or irrelevant.',
+            'Only source_catalog can support a finding or supply a source_id or quote. '
+            'Regulatory passages explain the criteria and cannot establish evidence about the target model.',
             'Return one finding per checklist item in the same order.',
             'Use only the supplied source_id values.',
             'Keep each finding compact: item_id, proposed status, source_id when applicable, one short quote when supported, and a brief gap explanation when needed.',
@@ -397,6 +456,11 @@ def call_openai_assessment(
             for source, outcome in zip(source_catalog, source_outcomes, strict=False)
         ],
     }
+    if regulatory_passages:
+        prompt['regulatory_context'] = {
+            'passages': regulatory_passages,
+            'by_item': regulatory_refs_by_item,
+        }
     try:
         response = requests.post(
             'https://api.openai.com/v1/responses',

@@ -183,7 +183,7 @@ def validate_and_normalize_target(state: IntakeState) -> IntakeState:
     provider = (state.get('provider') or '').strip()
     model = (state.get('model') or '').strip()
     if not model:
-        return {'error': 'Missing --model.'}
+        return {'error': 'Enter a model ID.'}
     if provider:
         _note_step('validate_and_normalize_target', 'Resolve input format', 'hosted provider + model ID')
         return {
@@ -195,7 +195,8 @@ def validate_and_normalize_target(state: IntakeState) -> IntakeState:
         }
     parts = model.split('/')
     if len(parts) != 2 or not parts[0].strip() or not parts[1].strip():
-        return {'error': 'For Hugging Face targets, use --model ORG/MODEL without --provider.'}
+        return {'error': 'Use the ORG/MODEL format for a Hugging Face model, for example Qwen/Qwen3-8B. '
+                         'For a hosted model, also give the provider name.'}
     _note_step('validate_and_normalize_target', 'Resolve input format', 'Hugging Face ORG/MODEL')
     return {
         'provider': 'Hugging Face',
@@ -440,6 +441,7 @@ def assess_evidence(state: IntakeState) -> IntakeState:
             },
             source_payloads,
             timeout_seconds=live_settings.assessment_timeout_seconds,
+            regulatory_context=state.get('regulatory_contexts') or {},
             describe=_describe_assessment_call,
         )
     except AssessmentFailure as exc:

@@ -353,7 +353,8 @@ def _arcs(run: PipelineRun, centres: list[float]) -> str:
     """
     order = run.topo.order
     position = {name: 2 * i for i, name in enumerate(order)}   # element column in the grid
-    arcs = run.topo.arcs
+    arcs = [(source, target, conditional) for source, target, conditional in run.topo.arcs
+            if not conditional or (source, target) in run.taken]
     if not arcs:
         return ''
     boxes, tips = [], []
@@ -413,8 +414,13 @@ def render_html(run: PipelineRun) -> str:
                 cells.append(f'<div class="pv-edge" data-state="{run.edge_state(name, following)}"><i></i></div>')
             else:  # neighbours that run side by side: no data passes between them
                 cells.append('<div class="pv-edge pv-par" data-state="none" title="runs in parallel"><i>‖</i></div>')
+    # after a run that left part of the graph unused, explain the dashed lines; a clean run needs no such entry
+    unused = run.status in ('done', 'error') and (
+        any(node.status == 'skipped' for node in run.nodes.values())
+        or any(_arc_state(run, s, t, c) == 'idle' for s, t, c in run.topo.arcs if not c))
+    dashed = '<span class="pv-dash">dashed: not used in this run</span>' if unused else ''
     legend = ('<div class="pv-legend"><span data-state="done">done</span><span data-state="running">running</span>'
               '<span data-state="error">failed</span><span data-state="skipped">skipped</span>'
-              '<span class="pv-dash">dashed: not used in this run</span><span class="pv-parallel">‖ runs in parallel</span></div>')
+              f'{dashed}<span class="pv-parallel">‖ runs in parallel</span></div>')
     return (f'<div class="pv" data-run="{run.status}">{_header(run)}{_arcs(run, centres)}'
             f'<div class="pv-grid" style="grid-template-columns:{template}">{"".join(cells)}</div>{legend}</div>')

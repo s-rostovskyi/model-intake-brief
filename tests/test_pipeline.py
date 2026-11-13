@@ -119,7 +119,7 @@ def test_events_do_not_leak_into_invoke_or_direct_calls():
 def test_failure_goes_straight_to_the_renderer():
     events, result = _collect({'live_mode': False, 'provider': None, 'model': 'not-a-valid-id'})
     assert [e['node'] for e in _kinds(events, 'node_started')] == ['validate_and_normalize_target', 'render_report']
-    assert result['error'].startswith('For Hugging Face targets')
+    assert result['error'].startswith('Use the ORG/MODEL format') and '--' not in result['error']
     assert not result.get('report_markdown')
 
     run = pv.PipelineRun(pv.topology())
@@ -148,6 +148,8 @@ def test_live_run_without_keys_skips_assessment_and_reports_the_original_error(m
     run = pv.replay(pv.topology(), [(i, e) for i, (_, e) in enumerate(events)])
     assert run.nodes['collect_sources'].status == 'error' and run.nodes['assess_evidence'].status == 'skipped'
     assert not run.taken   # nothing was bypassed: collection ran, assessment skipped itself
+    assert 'data-kind="error"' not in pv.render_html(run)
+    assert 'pv-dash' in pv.render_html(run)   # assessment was skipped, so the legend explains the dashes
 
 
 # --- live run with mocked services -------------------------------------------
@@ -271,7 +273,9 @@ def test_render_escapes_user_supplied_text():
 
 def test_parallel_neighbours_get_a_marker_instead_of_an_arrow():
     html = pv.render_html(pv.PipelineRun(pv.topology()))
-    assert html.count('pv-edge pv-par') == 1 and 'data-kind="parallel"' in html and 'data-kind="error"' in html
+    assert html.count('pv-edge pv-par') == 1 and 'data-kind="parallel"' in html
+    assert 'data-kind="error"' not in html
+    assert 'pv-dash' not in html   # before any run there is nothing to explain
 
 
 def test_layer_gate_shows_parallel_siblings_running_together_without_changing_events():
