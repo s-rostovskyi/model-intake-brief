@@ -4,7 +4,7 @@ An autonomous LangGraph agent that reviews the public documentation of an AI mod
 
 **Information, not legal advice.** The brief reports what public sources say. It does not decide compliance.
 
-- **Demo recording:** _add the link here (Loom, YouTube unlisted or Google Drive, opens without a login)_
+- **Demo:** presented live on 13 November 2026; the saved reports in `samples/` are the backup
 - **Slides:** [presentation/project3_slides.pdf](presentation/project3_slides.pdf)
 - **Stack decision:** [stack_decision.md](stack_decision.md)
 - **Future GTM sprints:** [gtm_future_sprints.md](gtm_future_sprints.md)
